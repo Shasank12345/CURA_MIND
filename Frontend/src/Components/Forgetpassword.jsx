@@ -1,54 +1,73 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ForgetPassword() {
-const [email, setEmail] = useState('')
-const navigate = useNavigate()
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
+  const handleSendOTP = async () => {
+    if (!email) return toast.error("Enter your email");
 
-const handleSendOTP = () => {
-if (!email) return alert('Enter your email')
-navigate('/otp', { state: { email } })
-}
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/auth/forgot_password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Email: email }),
+      });
+      const data = await res.json();
+      setLoading(false);
 
+      if (res.ok) {
+        toast.success(data.message);
+        navigate("/otp", { state: { email } });
+      } else {
+        toast.error(data.error || "Failed to send OTP");
+      }
+    } catch (err) {
+      setLoading(false);
+      console.error(err);
+      toast.error("Something went wrong");
+    }
+  };
 
-return (
-<div className="relative flex items-center justify-center w-full min-h-screen p-4 overflow-hidden bg-blue-50">
+  return (
+    <div
+      className="h-screen flex items-center justify-center bg-cover bg-center p-4"
+      style={{
+        backgroundImage: "url('/src/assets/fi.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="bg-white bg-opacity-90 p-8 rounded-3xl shadow-lg max-w-md w-full space-y-6">
+        {/* Navbar-style logo */}
+        <div className="flex items-center justify-center gap-2 text-2xl font-semibold">
+          <span className="text-green-600 text-3xl">🍃</span>
+          <span className="tracking-wide text-gray-800">CuraMind</span>
+        </div>
 
+        <p className="text-gray-600 text-center text-lg">Forgot Password</p>
 
-{/* Soft floating shapes */}
-<div className="absolute w-40 h-40 bg-blue-300 rounded-full top-10 left-10 mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-<div className="absolute bg-blue-500 rounded-full bottom-10 right-10 w-60 h-60 mix-blend-multiply filter blur-3xl opacity-40 animate-pulse"></div>
+        <input
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+        />
 
-
-{/* Centered Card */}
-<div className="relative z-10 w-full max-w-md p-10 bg-white border border-blue-100 shadow-2xl rounded-3xl">
-<h1 className="mb-3 text-4xl font-extrabold tracking-tight text-center text-blue-700">CuraMind</h1>
-<p className="mb-6 text-sm text-center text-gray-600">Your AI Health Companion</p>
-
-
-<h2 className="mb-6 text-2xl font-semibold text-center text-gray-800">Forgot Password</h2>
-
-
-<div className="flex flex-col gap-4">
-<input
-type="email"
-placeholder="Enter your Email"
-className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
-value={email}
-onChange={(e) => setEmail(e.target.value)}
-/>
-
-
-<button
-onClick={handleSendOTP}
-className="w-full py-3 text-lg font-medium text-white transition-all bg-blue-600 shadow-md rounded-xl hover:bg-blue-700"
->
-Send OTP
-</button>
-</div>
-</div>
-</div>
-)
+        <button
+          onClick={handleSendOTP}
+          className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+          disabled={loading}
+        >
+          {loading ? "Sending..." : "Send OTP"}
+        </button>
+      </div>
+    </div>
+  );
 }

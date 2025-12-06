@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function DoctorSignup() {
   const navigate = useNavigate();
-
-  // --- State variables ---
   const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -14,38 +14,13 @@ export default function DoctorSignup() {
   const [license, setLicense] = useState("");
   const [dob, setDob] = useState("");
 
-  // --- Handle signup ---
   const handleSignup = async () => {
-    // Basic validations
-    if (!fullname) {
-      alert("Please enter your full name");
-      return;
-    }
-
-    if (!email || emailError) {
-      alert("Please enter a valid email");
-      return;
-    }
-
-    if (!phone || phoneError) {
-      alert("Please enter a valid phone number");
-      return;
-    }
-
-    if (!spec) {
-      alert("Please enter your specialization");
-      return;
-    }
-
-    if (!license) {
-      alert("Please enter your license number");
-      return;
-    }
-
-    if (!dob) {
-      alert("Please select your date of birth");
-      return;
-    }
+    if (!fullname) return toast.error("Please enter your full name");
+    if (!email || emailError) return toast.error("Please enter a valid email");
+    if (!phone || phoneError) return toast.error("Please enter a valid phone number");
+    if (!spec) return toast.error("Please enter your specialization");
+    if (!license) return toast.error("Please enter your license number");
+    if (!dob) return toast.error("Please select your date of birth");
 
     const payload = {
       Full_Name: fullname,
@@ -60,36 +35,33 @@ export default function DoctorSignup() {
     try {
       const res = await fetch("http://localhost:5000/auth/sign_up", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (res.status === 201) {
-        alert("Signup successful! Temp password sent to email.");
-        navigate("/");
+        toast.success("Signup successful! Temp password sent to email.");
+        navigate("/Login");
       } else if (res.status === 409) {
-        alert("Email already exists. Please use a different email.");
+        toast.error("Email already exists. Please use a different email.");
       } else {
-        alert(data.error || "Signup failed");
+        toast.error(data.error || "Signup failed");
       }
     } catch (err) {
       console.error(err);
-      alert("Something went wrong");
+      toast.error("Something went wrong");
     }
   };
 
   return (
     <div
-      className="h-screen flex items-center justify-center bg-cover bg-center"
+      className="h-screen flex items-center justify-center bg-cover bg-center p-4"
       style={{ backgroundImage: `url('/src/assets/fi.jpg')` }}
     >
       <div className="bg-white bg-opacity-90 p-6 rounded-lg shadow-md w-full max-w-lg">
         <h1 className="text-2xl font-bold text-center">Sign Up as Doctor</h1>
-
         <p className="text-gray-500 font-semibold text-center mb-4 text-sm mt-2">
           Fill out your information to be signed up.
         </p>
@@ -116,16 +88,10 @@ export default function DoctorSignup() {
               onChange={(e) => {
                 setEmail(e.target.value);
                 const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                setEmailError(
-                  !regex.test(e.target.value)
-                    ? "Please enter a valid email address"
-                    : ""
-                );
+                setEmailError(!regex.test(e.target.value) ? "Please enter a valid email address" : "");
               }}
               placeholder="Enter your email address"
-              className={`w-full p-3 border rounded-lg text-sm ${
-                emailError ? "border-red-500" : "border-black"
-              }`}
+              className={`w-full p-3 border rounded-lg text-sm ${emailError ? "border-red-500" : "border-black"}`}
             />
             {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
           </div>
@@ -139,28 +105,22 @@ export default function DoctorSignup() {
               onChange={(e) => {
                 const value = e.target.value;
                 setPhone(value);
-
                 if (!/^\d*$/.test(value)) {
                   setPhoneError("Enter numbers only");
                   return;
                 }
-
                 if (value.length > 10) {
                   setPhoneError("Enter a valid 10-digit number");
                   return;
                 }
-
                 if (value.length > 0 && value.length < 10) {
                   setPhoneError("Phone number must be 10 digits");
                   return;
                 }
-
                 setPhoneError("");
               }}
               placeholder="Enter your phone number"
-              className={`w-full p-3 border rounded-lg text-sm ${
-                phoneError ? "border-red-500" : "border-black"
-              }`}
+              className={`w-full p-3 border rounded-lg text-sm ${phoneError ? "border-red-500" : "border-black"}`}
             />
             {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
           </div>
