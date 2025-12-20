@@ -46,21 +46,28 @@ export default function UserSignup() {
 
   return (
     <div
+    
       className="h-screen flex items-center justify-center bg-cover bg-center p-4"
       style={{ backgroundImage: `url('/src/assets/fi.jpg')` }}
     >
       <div className="bg-white bg-opacity-90 p-8 rounded-3xl shadow-lg max-w-md w-full space-y-4">
         <h1 className="text-3xl font-bold text-center text-blue-700">Sign Up as User</h1>
-
+        <p className="text-gray-500 font-semibold text-center mb-4 text-sm mt-2">
+          Fill out your information to be signed up.
+        </p>
+        <div>
+ <label className="font-semibold">Full Name</label>
         <input
           type="text"
           placeholder="Full Name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+          className="w-full p-3 border border-black-300 rounded-lg text-sm"
         />
-
+        </div>
+ <label className="font-semibold">Email</label>
         <input
+        
           type="email"
           placeholder="Email"
           value={email}
@@ -69,11 +76,12 @@ export default function UserSignup() {
             const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             setEmailError(!regex.test(e.target.value) ? "Invalid email" : "");
           }}
-          className={`w-full p-3 border rounded-lg text-sm ${emailError ? "border-red-500" : "border-gray-300"}`}
+          className={`w-full p-3 border rounded-lg text-sm ${emailError ? "border-red-500" : "border-black-300"}`}
         />
         {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
-
+ <label className="font-semibold">Phone number</label>
         <input
+        
           type="text"
           placeholder="Phone Number"
           value={phone}
@@ -84,23 +92,24 @@ export default function UserSignup() {
             else if (val.length !== 10) setPhoneError("Phone must be 10 digits");
             else setPhoneError("");
           }}
-          className={`w-full p-3 border rounded-lg text-sm ${phoneError ? "border-red-500" : "border-gray-300"}`}
+          className={`w-full p-3 border rounded-lg text-sm ${phoneError ? "border-red-500" : "border-black-300"}`}
+         
         />
         {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
-
+ <label className="font-semibold">Address</label>
         <input
           type="text"
           placeholder="Address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+          className="w-full p-3 border border-black-300 rounded-lg text-sm"
         />
-
+ <label className="font-semibold">DOB</label>
         <input
           type="date"
           value={dob}
           onChange={(e) => setDob(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg text-sm"
+          className="w-full p-3 border border-black-300 rounded-lg text-sm"
         />
 
         <button

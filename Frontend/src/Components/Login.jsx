@@ -59,7 +59,7 @@ export default function Login() {
           <span className="tracking-wide text-gray-800">CuraMind</span>
         </div>
 
-        <p className="text-gray-600 text-center mt-2">
+        <p className="text-gray-600 text-center mt-2 font-semibold">
           Where smart technology meets smart health
         </p>
 
@@ -75,7 +75,7 @@ export default function Login() {
                 setEmailError(!regex.test(e.target.value) ? "Enter valid email" : "");
               }}
               className={`w-full p-3 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 ${
-                emailError ? "border-red-500" : "border-gray-300"
+                emailError ? "border-red-500" : "border-black-300"
               }`}
             />
             {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
@@ -87,7 +87,7 @@ export default function Login() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full p-3 border border-black-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
             />
             <button
               type="button"
@@ -116,15 +116,37 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center text-gray-500 text-sm mt-2">
-          Don’t have an account?{" "}
-          <span
-            className="text-blue-600 font-semibold cursor-pointer hover:underline"
-            onClick={() => navigate("/Usersignup")}
-          >
-            Sign Up
-          </span>
-        </p>
+       <p className="text-center text-gray-500 text-sm mt-2 font-semibold">
+  Don’t have an account?{" "}
+
+  <span className="relative group inline-block cursor-pointer text-blue-600 font-semibold hover:underline">
+    Signup
+
+    
+    <div
+      className="absolute left-1/2 -translate-x-1/2 mt-2 w-48 bg-white border border-gray-300
+                 rounded-xl shadow-lg p-2 space-y-2 opacity-0 invisible
+                 group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+    >
+      <div
+        onClick={() => navigate("/UserSignup")}
+        className="w-full py-2 px-3 text-left rounded-lg border border-black
+                   hover:bg-green-50 cursor-pointer text-sm font-medium transition"
+      >
+        👤 Sign up as User
+      </div>
+
+      <div
+        onClick={() => navigate("/DoctorSignup")}
+        className="w-full py-2 px-3 text-left rounded-lg border border-black
+                   hover:bg-black-50 cursor-pointer text-sm font-medium transition"
+      >
+        👨‍⚕️ Sign up as Doctor
+      </div>
+    </div>
+  </span>
+</p>
+
       </div>
     </div>
   );

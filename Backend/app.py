@@ -11,7 +11,7 @@ CORS(app, supports_credentials=True)
 
 db.init_app(app)
 mail.init_app(app)
-app.secret_key=app.config['SECRET_KEY']  # Make sure you have SECRET_KEY in your .env
+app.secret_key=app.config['SECRET_KEY']
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SECURE'] = False  
 register_routes(app)

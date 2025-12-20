@@ -36,7 +36,7 @@ export default function HomePage() {
             >
               <div
                 onClick={() => navigate("/DoctorSignup")}
-                className="w-full py-2 px-3 text-left rounded-lg border border-gray-200
+                className="w-full py-2 px-3 text-left rounded-lg border border-gray-black
                            hover:bg-green-50 cursor-pointer text-sm font-medium transition"
               >
                 👨‍⚕️ Sign up as Doctor
@@ -44,7 +44,7 @@ export default function HomePage() {
 
               <div
                 onClick={() => navigate("/UserSignup")}
-                className="w-full py-2 px-3 text-left rounded-lg border border-gray-200
+                className="w-full py-2 px-3 text-left rounded-lg border border-gray-black
                            hover:bg-green-50 cursor-pointer text-sm font-medium transition"
               >
                 👤 Sign up as User

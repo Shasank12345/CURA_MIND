@@ -47,7 +47,7 @@ export default function ForgetPassword() {
         {/* Navbar-style logo */}
         <div className="flex items-center justify-center gap-2 text-2xl font-semibold">
           <span className="text-green-600 text-3xl">🍃</span>
-          <span className="tracking-wide text-gray-800">CuraMind</span>
+          <span className="tracking-wide text-black-800">CuraMind</span>
         </div>
 
         <p className="text-gray-600 text-center text-lg">Forgot Password</p>
@@ -57,7 +57,7 @@ export default function ForgetPassword() {
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+          className="w-full p-3 border border-black-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
         />
 
         <button

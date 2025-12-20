@@ -47,7 +47,7 @@ export default function NewPassword() {
           placeholder="New Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+          className="w-full p-3 border border-black-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
         />
 
         <input
@@ -55,7 +55,7 @@ export default function NewPassword() {
           placeholder="Confirm Password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+          className="w-full p-3 border border-black-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
         />
 
         <button
