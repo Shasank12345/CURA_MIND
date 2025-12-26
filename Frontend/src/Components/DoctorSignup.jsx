@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function DoctorSignup() {
   const navigate = useNavigate();
+
   const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -14,6 +15,24 @@ export default function DoctorSignup() {
   const [license, setLicense] = useState("");
   const [dob, setDob] = useState("");
 
+  const [licensePhoto, setLicensePhoto] = useState(null);
+  const [preview, setPreview] = useState(null);
+
+  // 📸 Handle license photo
+  const handleLicensePhoto = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 200 * 1024) {
+      toast.error("License photo must be less than 200 KB");
+      e.target.value = "";
+      return;
+    }
+
+    setLicensePhoto(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
   const handleSignup = async () => {
     if (!fullname) return toast.error("Please enter your full name");
     if (!email || emailError) return toast.error("Please enter a valid email");
@@ -21,22 +40,22 @@ export default function DoctorSignup() {
     if (!spec) return toast.error("Please enter your specialization");
     if (!license) return toast.error("Please enter your license number");
     if (!dob) return toast.error("Please select your date of birth");
+    if (!licensePhoto) return toast.error("Please upload license photo (max 200KB)");
 
-    const payload = {
-      Full_Name: fullname,
-      Email: email,
-      Phone_Number: phone,
-      Spec: spec,
-      License_no: license,
-      DOB: dob,
-      role: "Doctor",
-    };
+    const formData = new FormData();
+    formData.append("Full_Name", fullname);
+    formData.append("Email", email);
+    formData.append("Phone_Number", phone);
+    formData.append("Spec", spec);
+    formData.append("License_no", license);
+    formData.append("DOB", dob);
+    formData.append("role", "Doctor");
+    formData.append("licenseImage", licensePhoto);
 
     try {
       const res = await fetch("http://localhost:5000/auth/sign_up", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData, // ✅ multipart/form-data
       });
 
       const data = await res.json();
@@ -45,7 +64,7 @@ export default function DoctorSignup() {
         toast.success("Signup successful! Temp password sent to email.");
         navigate("/Login");
       } else if (res.status === 409) {
-        toast.error("Email already exists. Please use a different email.");
+        toast.error("Email already exists.");
       } else {
         toast.error(data.error || "Signup failed");
       }
@@ -68,103 +87,89 @@ export default function DoctorSignup() {
 
         <div className="space-y-3 text-sm">
           {/* Full Name */}
-          <div>
-            <label className="font-semibold">Full Name</label>
-            <input
-              type="text"
-              value={fullname}
-              onChange={(e) => setFullname(e.target.value)}
-              placeholder="Enter your full name"
-              className="w-full p-3 border border-black rounded-lg text-sm"
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Full Name"
+            value={fullname}
+            onChange={(e) => setFullname(e.target.value)}
+            className="w-full p-3 border border-black rounded-lg"
+          />
 
           {/* Email */}
-          <div>
-            <label className="font-semibold">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                setEmailError(!regex.test(e.target.value) ? "Please enter a valid email address" : "");
-              }}
-              placeholder="Enter your email address"
-              className={`w-full p-3 border rounded-lg text-sm ${emailError ? "border-red-500" : "border-black"}`}
-            />
-            {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
-          </div>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              setEmailError(!regex.test(e.target.value) ? "Invalid email" : "");
+            }}
+            className={`w-full p-3 border rounded-lg ${emailError ? "border-red-500" : "border-black"}`}
+          />
 
           {/* Phone */}
-          <div>
-            <label className="font-semibold">Phone Number</label>
-            <input
-              type="text"
-              value={phone}
-              onChange={(e) => {
-                const value = e.target.value;
-                setPhone(value);
-                if (!/^\d*$/.test(value)) {
-                  setPhoneError("Enter numbers only");
-                  return;
-                }
-                if (value.length > 10) {
-                  setPhoneError("Enter a valid 10-digit number");
-                  return;
-                }
-                if (value.length > 0 && value.length < 10) {
-                  setPhoneError("Phone number must be 10 digits");
-                  return;
-                }
-                setPhoneError("");
-              }}
-              placeholder="Enter your phone number"
-              className={`w-full p-3 border rounded-lg text-sm ${phoneError ? "border-red-500" : "border-black"}`}
-            />
-            {phoneError && <p className="text-red-500 text-xs mt-1">{phoneError}</p>}
-          </div>
+          <input
+            type="text"
+            placeholder="Phone Number"
+            value={phone}
+            onChange={(e) => {
+              const v = e.target.value;
+              setPhone(v);
+              setPhoneError(v.length !== 10 ? "Phone must be 10 digits" : "");
+            }}
+            className={`w-full p-3 border rounded-lg ${phoneError ? "border-red-500" : "border-black"}`}
+          />
 
           {/* Specialization */}
-          <div>
-            <label className="font-semibold">Area of Specialization</label>
-            <input
-              type="text"
-              value={spec}
-              onChange={(e) => setSpec(e.target.value)}
-              placeholder="Enter your specialization"
-              className="w-full p-3 border border-black rounded-lg text-sm"
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Specialization"
+            value={spec}
+            onChange={(e) => setSpec(e.target.value)}
+            className="w-full p-3 border border-black rounded-lg"
+          />
 
-          {/* License Number */}
-          <div>
-            <label className="font-semibold">Doctor License Number</label>
-            <input
-              type="text"
-              value={license}
-              onChange={(e) => setLicense(e.target.value)}
-              placeholder="Enter your License number"
-              className="w-full p-3 border border-black rounded-lg text-sm"
-            />
-          </div>
+          {/* License No */}
+          <input
+            type="text"
+            placeholder="License Number"
+            value={license}
+            onChange={(e) => setLicense(e.target.value)}
+            className="w-full p-3 border border-black rounded-lg"
+          />
 
           {/* DOB */}
+          <input
+            type="date"
+            value={dob}
+            onChange={(e) => setDob(e.target.value)}
+            className="w-full p-3 border border-black rounded-lg"
+          />
+
+          {/* 🆕 License Photo */}
           <div>
-            <label className="font-semibold">Date of Birth</label>
+            <label className="font-semibold">License Photo </label>
             <input
-              type="date"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              className="w-full p-3 border border-black rounded-lg text-sm"
+              type="file"
+              accept="image/*"
+              onChange={handleLicensePhoto}
+              className="w-full p-2 border border-black rounded-lg"
             />
+
+            {preview && (
+              <img
+                src={preview}
+                alt="License Preview"
+                className="mt-2 w-full h-40 object-contain border rounded-lg"
+              />
+            )}
           </div>
         </div>
 
         <button
-          type="button"
           onClick={handleSignup}
-          className="mt-4 w-full bg-indigo-600 text-white p-3 rounded-md font-bold text-sm hover:bg-blue-700 transition"
+          className="mt-4 w-full bg-indigo-600 text-white p-3 rounded-md font-bold hover:bg-blue-700"
         >
           Sign Up
         </button>
