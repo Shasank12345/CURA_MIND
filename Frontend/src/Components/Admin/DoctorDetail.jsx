@@ -14,7 +14,7 @@ export default function App() {
       licenseNo: "LIC-78412",
       phone: "+977-9801122334",
     },
-    {
+    {//uifdjncsmxz
       id: 3,
       name: "Dr. Rajesh Thapa",
       specialization: "Orthopedic",
