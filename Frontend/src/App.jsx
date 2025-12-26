@@ -14,6 +14,8 @@ import Dashboard from "./Components/Admin/Dashboard";
 import DoctorDetail from "./Components/Admin/DoctorDetail";
 import Rejectoption from './Components/Admin/Rejectoption';
 import User1 from './Components/Admin/User1'
+import DoctorRespond1 from './Components/Admin/DoctorRespond1'
+import DoctorRespond2 from "./Components/Admin/DoctorRespond2";
 
 // Toast notifications
 import { ToastContainer } from "react-toastify";
@@ -40,6 +42,8 @@ function App() {
       <Route path="rejectoption" element={<Rejectoption />} />
         <Route path="doctordetail" element={<DoctorDetail/>} />
         <Route path="user1" element={<User1/>} />
+        <Route path="doctorrespond1" element={<DoctorRespond1 />} />
+    <Route path="doctorrespond2" element={<DoctorRespond2 />} />
    </Route>
 </Routes>
 
