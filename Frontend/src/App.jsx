@@ -11,8 +11,8 @@ import OTP from "./Components/OTP";
 import NewPassword from "./Components/Newpassword";
 import Sidebar from './Components/Admin/Sidebar'
 import Dashboard from "./Components/Admin/Dashboard";
-//import DoctorDetail from "./Components/Admin/DoctorDetail";
-//import Rejectoption from './Components/Admin/Rejectoption';
+import DoctorDetail from "./Components/Admin/DoctorDetail";
+import Rejectoption from './Components/Admin/Rejectoption';
 import User1 from './Components/Admin/User1'
 
 // Toast notifications
@@ -37,8 +37,8 @@ function App() {
    
     <Route index element={<Dashboard />} /> 
     <Route path="dashboard" element={<Dashboard />} />
-      {/* <Route path="rejectoption" element={<Rejectoption />} />
-        <Route path="doctordetail" element={<DoctorDetail/>} /> */}
+      <Route path="rejectoption" element={<Rejectoption />} />
+        <Route path="doctordetail" element={<DoctorDetail/>} />
         <Route path="user1" element={<User1/>} />
    </Route>
 </Routes>
