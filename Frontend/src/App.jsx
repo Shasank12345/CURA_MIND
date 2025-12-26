@@ -11,7 +11,8 @@ import OTP from "./Components/OTP";
 import NewPassword from "./Components/Newpassword";
 import Sidebar from './Components/Admin/Sidebar'
 import Dashboard from "./Components/Admin/Dashboard";
-
+import DoctorDetail from "./Components/Admin/DoctorDetail";
+import Rejectoption from './Components/Admin/Rejectoption';
 
 // Toast notifications
 import { ToastContainer } from "react-toastify";
@@ -35,6 +36,8 @@ function App() {
    
     <Route index element={<Dashboard />} /> 
     <Route path="dashboard" element={<Dashboard />} />
+      <Route path="rejectoption" element={<Rejectoption />} />
+        <Route path="doctordetail" element={<DoctorDetail/>} />
    </Route>
 </Routes>
 
