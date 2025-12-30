@@ -12,7 +12,7 @@ export default function AdminLayout() {
     {
       icon: <ClipboardList className="w-6 h-6" />,
       label: "Verification Queue",
-      path: "doctorrespond1",
+      path: "doctorresponse1",
     },
   ];
 
