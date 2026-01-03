@@ -12,6 +12,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
     "axios": "^1.13.2",
+    "jspdf": "^4.0.0",
     "libphonenumber-js": "^1.12.33",
     "lucide-react": "^0.555.0",
     "react": "^19.2.0",

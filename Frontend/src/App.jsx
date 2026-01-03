@@ -16,6 +16,9 @@ import Rejectoption from './Components/Admin/Rejectoption';
 import User1 from './Components/Admin/User1'
 import DoctorResponse1 from './Components/Admin/DoctorResponse1'
 import DoctorResponse2 from "./Components/Admin/DoctorResponse2";
+import Navbar from "./Components/Module-2/Navbar";
+import UserDashboard from "./Components/Module-2/UserDashboard";
+import Chatbot from "./Components/Module-2/Chatbot";
 
 // Toast notifications
 import { ToastContainer } from "react-toastify";
@@ -45,6 +48,13 @@ function App() {
         <Route path="doctorresponse1" element={<DoctorResponse1 />} />
     <Route path="doctorresponse2" element={<DoctorResponse2 />} />
    </Route>
+
+     {/* User */}
+        <Route path="/userpannel" element={<Navbar />}>
+          <Route index element={<UserDashboard />} />
+          <Route path="dashboard" element={<UserDashboard />} />
+          <Route path="chatbot" element={<Chatbot />} />
+        </Route>
 </Routes>
 
       <ToastContainer position="top-right" autoClose={2000} />

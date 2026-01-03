@@ -55,7 +55,7 @@ function ActionCards() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
       {/* Start Assessment */}
-      <Link to="/userdashboard/chatbot" className="block">
+      <Link to="/userpannel/chatbot" className="block">
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white p-8 flex flex-col items-center justify-center cursor-pointer hover:from-green-600 hover:to-green-700 transition shadow-md hover:scale-[1.02]">
           <FileText className="w-12 h-12 mb-4" />
           <h3 className="text-xl font-medium text-center">
