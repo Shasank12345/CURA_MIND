@@ -16,9 +16,16 @@ import Rejectoption from './Components/Admin/Rejectoption';
 import User1 from './Components/Admin/User1'
 import DoctorResponse1 from './Components/Admin/DoctorResponse1'
 import DoctorResponse2 from "./Components/Admin/DoctorResponse2";
+// user
 import Navbar from "./Components/Module-2/Navbar";
 import UserDashboard from "./Components/Module-2/UserDashboard";
 import Chatbot from "./Components/Module-2/Chatbot";
+import ProfileEdit from"./Components/Module-2/ProfileEdit"
+import UserProfile from"./Components/Module-2/UserProfile"
+// doctor
+import DoctorDashboard from "./Components/Module-3/DoctorDashboard";
+import DoctorNav from "./Components/Module-3/DoctorNav";
+import ProfileEdit from"./Components/Module-3/EditProfile"
 
 // Toast notifications
 import { ToastContainer } from "react-toastify";
@@ -54,6 +61,19 @@ function App() {
           <Route index element={<UserDashboard />} />
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="chatbot" element={<Chatbot />} />
+           
+          <Route path="onetoonechat" element={<Onetoonechat />} />
+         
+             <Route path="userprofile" element={<UserProfile />} />
+             <Route path="profileedit" element={<ProfileEdit />} />
+ 
+        </Route>
+        {/* doctor */}
+<Route path="/doctordashboard" element={<DoctorNav/>}>
+          <Route index element={<DoctorDashboard />} />
+           <Route path="dashboard" element={<DoctorDashboard />} />
+           <Route path="onetoonechat" element={<Onetoonechat />} />
+            <Route path="editprofile" element={<EditProfile />} />
         </Route>
 </Routes>
 

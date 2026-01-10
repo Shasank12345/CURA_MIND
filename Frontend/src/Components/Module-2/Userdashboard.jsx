@@ -2,14 +2,12 @@ import {
   Stethoscope,
   Loader2,
   FileText,
-  User,
-  LogOut,
   Lightbulb,
   Clock,
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link} from "react-router-dom";
 
 /* ---------------- Simple UI Components ---------------- */
 
@@ -32,6 +30,36 @@ function Button({ children, className = "", ...props }) {
   );
 }
 
+/* ----------------------------- Header ----------------------------- */
+/* Fixed ONLY for dashboard */
+
+// function DashboardHeader() {
+//   const navigate = useNavigate();
+
+//   return (
+//     <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-gradient-to-r from-emerald-400 to-teal-400 flex items-center justify-between px-6 shadow">
+//       <h1 className="text-white text-xl font-semibold">
+//         CuraMind
+//       </h1>
+
+//       <div className="flex items-center gap-3">
+//         <button className="flex items-center gap-1 text-white bg-white/20 px-3 py-1.5 rounded-md hover:bg-white/30">
+//           <User className="w-4 h-4" />
+//           Profile
+//         </button>
+
+//         {/* Logout redirects to /login */}
+//         <button
+//           onClick={() => navigate("/login")}
+//           className="flex items-center gap-1 text-white bg-white/20 px-3 py-1.5 rounded-md hover:bg-white/30"
+//         >
+//           <LogOut className="w-4 h-4" />
+//           Logout
+//         </button>
+//       </div>
+//     </header>
+//   );
+// }
 
 /* --------------------------- Welcome Card --------------------------- */
 
@@ -54,7 +82,7 @@ function ActionCards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-      {/* Start Assessment */}
+      {/* SAME PAGE navigation */}
       <Link to="/userpannel/chatbot" className="block">
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white p-8 flex flex-col items-center justify-center cursor-pointer hover:from-green-600 hover:to-green-700 transition shadow-md hover:scale-[1.02]">
           <FileText className="w-12 h-12 mb-4" />
@@ -64,7 +92,8 @@ function ActionCards() {
         </Card>
       </Link>
 
-      {/* Consult Doctor (Locked Until Assessment) */}
+      {/* Consult Doctor (Locked) */}
+       <Link to="/userpannel/onetoonechat" className="block">
       <Card className="group bg-gradient-to-br from-purple-600 to-purple-700 text-white p-8 relative overflow-hidden shadow-md cursor-pointer transition hover:scale-[1.02]">
         <div className="flex flex-col items-center justify-center h-full transition-opacity duration-300 group-hover:opacity-20">
           <Stethoscope className="w-12 h-12 mb-4" />
@@ -72,7 +101,6 @@ function ActionCards() {
             Consult Doctor
           </h3>
         </div>
-
         <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Loader2 className="w-10 h-10 text-gray-400 mb-3 animate-spin" />
           <h3 className="text-lg text-gray-700">
@@ -83,6 +111,7 @@ function ActionCards() {
           </p>
         </div>
       </Card>
+        </Link>
     </div>
   );
 }
@@ -139,12 +168,8 @@ function TriageHistory({ triageHistory = [] }) {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="min-w-[120px]">
-                    <p className="font-medium">
-                      {entry.date}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {entry.subtitle}
-                    </p>
+                    <p className="font-medium">{entry.date}</p>
+                    <p className="text-sm text-gray-500">{entry.subtitle}</p>
                   </div>
 
                   <div>
@@ -160,12 +185,8 @@ function TriageHistory({ triageHistory = [] }) {
                   </div>
 
                   <div>
-                    <p className="font-medium">
-                      {entry.title}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {entry.status}
-                    </p>
+                    <p className="font-medium">{entry.title}</p>
+                    <p className="text-sm text-gray-500">{entry.status}</p>
                   </div>
                 </div>
 
@@ -189,7 +210,10 @@ export default function UserDashboard({
 }) {
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
+      {/* <DashboardHeader /> */}
+
+      {/* offset for fixed header */}
+      <main className="max-w-6xl mx-auto p-6 pt-24 space-y-6">
         <WelcomeCard userName={userName} />
         <ActionCards />
         <ImmediateCareAdvice />

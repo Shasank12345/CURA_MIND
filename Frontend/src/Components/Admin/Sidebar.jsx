@@ -70,8 +70,16 @@ export default function AdminLayout() {
           })}
         </nav>
 
-      
-        <div className="pt-6 border-t border-gray-200 text-sm text-gray-500 font-medium">
+        {/* Logout button above the trademark */}
+        <button
+          onClick={() => navigate("/")}
+          className="mt-6 mb-2 w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow"
+        >
+          Logout
+        </button>
+
+        {/* Trademark */}
+        <div className="pt-2 border-t border-gray-200 text-sm text-gray-500 font-medium">
           © 2025 CuraMind
         </div>
       </aside>
