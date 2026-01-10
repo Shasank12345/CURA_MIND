@@ -25,7 +25,8 @@ import UserProfile from"./Components/Module-2/UserProfile"
 // doctor
 import DoctorDashboard from "./Components/Module-3/DoctorDashboard";
 import DoctorNav from "./Components/Module-3/DoctorNav";
-import ProfileEdit from"./Components/Module-3/EditProfile"
+import EditProfile from"./Components/Module-3/EditProfile"
+import Onetoonechat from"./Components/Onetoonechat";
 
 // Toast notifications
 import { ToastContainer } from "react-toastify";
