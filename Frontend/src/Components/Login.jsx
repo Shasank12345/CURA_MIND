@@ -31,7 +31,7 @@ export default function Login() {
       const data = await res.json();
 
       if (res.ok) {
-        // Essential session data for the frontend
+        
         sessionStorage.setItem("email", data.email);
         sessionStorage.setItem("role", data.role);
 
@@ -41,7 +41,7 @@ export default function Login() {
         } else {
           toast.success("Login successful!");
           
-          // Manual Routing Logic since you're not using ProtectedRoute wrappers
+      
           if (data.role === "Admin") {
             navigate("/adminpannel");
           } else if (data.role === "Doctor") {
@@ -51,7 +51,7 @@ export default function Login() {
           }
         }
       } else {
-        // Handles 401 (Wrong credentials) and 403 (Doctor not verified)
+       
         toast.error(data.error || "Login failed");
       }
     } catch (err) {
