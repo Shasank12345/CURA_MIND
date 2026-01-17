@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { Link} from "react-router-dom";
 
-/* ---------------- Simple UI Components ---------------- */
 
 function Card({ children, className = "" }) {
   return (

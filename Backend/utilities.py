@@ -7,10 +7,14 @@ def gen_pass(length=5):
     chars = string.ascii_letters + string.digits
     return ''.join(random.choices(chars, k=length))
 
-def send_mail(email, content, is_rejection=False):
+def send_mail(email, content, is_rejection=False,doc=False):
     if is_rejection:
         subject = "Update on your CuraMind Application"
         body = f"Hello,\n\n{content}\n\n- CuraMind Team"
+
+    elif  doc:
+        subject ='Update on your CuraMind Application'
+        body ='Your application has been received successfully. Please wait for the admin to verify it.'
     else:
         subject = "Your CuraMind Temporary Password"
         body = f"Hello!\n\nYour temporary password is: {content}\nPlease log in and change it immediately.\n\n- CuraMind Team"

@@ -31,7 +31,7 @@ def sign_up():
     try:
         new_account = Account(
             email=email,
-            password=temp_password, # Storing as plain text
+            password=temp_password,
             role=role,
             is_temp_password=True,
             is_verified=is_verified
@@ -57,6 +57,7 @@ def sign_up():
             )
 
             image_url = supabase_client.storage.from_('licenses').get_public_url(filename)
+            
             profile = Doctor(
                 acc_id=new_account.id,
                 full_name=data.get('Full_Name'),
@@ -66,6 +67,7 @@ def sign_up():
                 dob=dob_date,
                 license_img=image_url
             )
+            send_mail(email, temp_password, doc=True)
            
         else:
             profile = User(
@@ -109,7 +111,7 @@ def change_password():
     new_pass = request.json.get("NewPassword")
     account = Account.query.filter_by(email=email).first()
     
-    account.password = new_pass # Updating as plain text
+    account.password = new_pass
     account.is_temp_password = False
     db.session.commit()
 
@@ -123,19 +125,15 @@ def forgot_password():
     
     if not account:
         return jsonify({"error": "Email not found"}), 404
-
-    # Generate a 6-digit OTP
     otp_code = str(random.randint(100000, 999999))
     expiry = datetime.utcnow() + timedelta(minutes=5)
-
-    # Invalidate old unused OTPs for this email
     Otp.query.filter_by(email=email, used=False).update({"used": True})
     
     new_otp = Otp(email=email, otp=otp_code, expires_at=expiry)
     db.session.add(new_otp)
     db.session.commit()
 
-    # Using the rejection flag in your utility to ensure correct email formatting
+
     send_mail(email, f"Your reset OTP is: {otp_code}", is_rejection=True)
     return jsonify({"message": "OTP sent"}), 200
 

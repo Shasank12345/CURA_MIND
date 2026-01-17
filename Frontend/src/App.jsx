@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 
-// Pages & Components
+// Auth & Public
 import Login from "./Components/Login";
 import ForgetPassword from "./Components/Forgetpassword";
 import UserSignup from "./Components/UserSignup";
@@ -9,6 +9,8 @@ import DoctorSignup from "./Components/DoctorSignup";
 import HomePage from "./Components/Homepage/HomePage";
 import OTP from "./Components/OTP";
 import NewPassword from "./Components/Newpassword";
+
+// Admin
 import Sidebar from './Components/Admin/Sidebar'
 import Dashboard from "./Components/Admin/Dashboard";
 import DoctorDetail from "./Components/Admin/DoctorDetail";
@@ -16,67 +18,65 @@ import Rejectoption from './Components/Admin/Rejectoption';
 import User1 from './Components/Admin/User1'
 import DoctorResponse1 from './Components/Admin/DoctorResponse1'
 import DoctorResponse2 from "./Components/Admin/DoctorResponse2";
-// user
+
+// User (Module 2)
 import Navbar from "./Components/Module-2/Navbar";
 import UserDashboard from "./Components/Module-2/UserDashboard";
 import Chatbot from "./Components/Module-2/Chatbot";
-import ProfileEdit from"./Components/Module-2/ProfileEdit"
-import UserProfile from"./Components/Module-2/UserProfile"
-// doctor
-import DoctorDashboard from "./Components/Module-3/DoctorDashboard";
+import UserProfile from "./Components/Module-2/UserProfile";
+import UserProfileEdit from "./Components/Module-2/ProfileEdit";
+
+// Doctor (Module 3)
 import DoctorNav from "./Components/Module-3/DoctorNav";
-import EditProfile from"./Components/Module-3/EditProfile"
-import Onetoonechat from"./Components/Onetoonechat";
+import DoctorDashboard from "./Components/Module-3/DoctorDashboard";
+import DoctorProfileEdit from "./Components/Module-3/EditProfile";
+import Onetoonechat from "./Components/Onetoonechat"; 
 
 // Toast notifications
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
 function App() {
   return (
     <>
-     <Routes>
-  <Route path="/" element={<HomePage />} />
-  <Route path="/Usersignup" element={<UserSignup />} />
-  <Route path="/DoctorSignup" element={<DoctorSignup />} />
-  <Route path="/Login" element={<Login />} />
-  <Route path="/ForgotPassword" element={<ForgetPassword />} />
-  <Route path="/otp" element={<OTP />} />
-  <Route path="/newpassword" element={<NewPassword />} /> 
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/Usersignup" element={<UserSignup />} />
+        <Route path="/DoctorSignup" element={<DoctorSignup />} />
+        <Route path="/Login" element={<Login />} />
+        <Route path="/ForgotPassword" element={<ForgetPassword />} />
+        <Route path="/otp" element={<OTP />} />
+        <Route path="/newpassword" element={<NewPassword />} /> 
 
-  {/* Admin Routes */}
-  <Route path="/adminpannel" element={<Sidebar/>}>
-   
-    <Route index element={<Dashboard />} /> 
-    <Route path="dashboard" element={<Dashboard />} />
-      <Route path="rejectoption" element={<Rejectoption />} />
-        <Route path="doctordetail" element={<DoctorDetail/>} />
-        <Route path="user1" element={<User1/>} />
-        <Route path="doctorresponse1" element={<DoctorResponse1 />} />
-    <Route path="doctorresponse2" element={<DoctorResponse2 />} />
-   </Route>
+        {/* Admin Routes */}
+        <Route path="/adminpannel" element={<Sidebar />}>
+          <Route index element={<Dashboard />} /> 
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="rejectoption" element={<Rejectoption />} />
+          <Route path="doctordetail" element={<DoctorDetail />} />
+          <Route path="user1" element={<User1 />} />
+          <Route path="doctorresponse1" element={<DoctorResponse1 />} />
+          <Route path="doctorresponse2" element={<DoctorResponse2 />} />
+        </Route>
 
-     {/* User */}
+        {/* User Routes */}
         <Route path="/userpannel" element={<Navbar />}>
           <Route index element={<UserDashboard />} />
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="chatbot" element={<Chatbot />} />
-           
           <Route path="onetoonechat" element={<Onetoonechat />} />
-         
-             <Route path="userprofile" element={<UserProfile />} />
-             <Route path="profileedit" element={<ProfileEdit />} />
- 
+          <Route path="userprofile" element={<UserProfile />} />
+          <Route path="profileedit" element={<UserProfileEdit />} />
         </Route>
-        {/* doctor */}
-<Route path="/doctordashboard" element={<DoctorNav/>}>
+
+        {/* Doctor Routes */}
+        <Route path="/doctordashboard" element={<DoctorNav />}>
           <Route index element={<DoctorDashboard />} />
-           <Route path="dashboard" element={<DoctorDashboard />} />
-           <Route path="onetoonechat" element={<Onetoonechat />} />
-            <Route path="editprofile" element={<EditProfile />} />
+          <Route path="dashboard" element={<DoctorDashboard />} />
+          <Route path="onetoonechat" element={<Onetoonechat />} />
+          <Route path="editprofile" element={<DoctorProfileEdit />} />
         </Route>
-</Routes>
+      </Routes>
 
       <ToastContainer position="top-right" autoClose={2000} />
     </>
