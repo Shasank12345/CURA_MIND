@@ -7,7 +7,7 @@ export default function AdminLayout() {
 
   const navItems = [
     { icon: <LayoutGrid className="w-6 h-6" />, label: "Dashboard", path: "dashboard" },
-    { icon: <Users className="w-6 h-6" />, label: "Users", path: "user1" },
+    { icon: <Users className="w-6 h-6" />, label: "Users", path: "User1" },
     { icon: <Stethoscope className="w-6 h-6" />, label: "Doctors", path: "doctordetail" },
     {
       icon: <ClipboardList className="w-6 h-6" />,

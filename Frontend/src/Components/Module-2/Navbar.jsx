@@ -1,5 +1,5 @@
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { User, LogOut } from "lucide-react";
+import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
+import { User, LogOut, Stethoscope, LayoutDashboard } from "lucide-react";
 
 export default function UserNavbar() {
   const location = useLocation();
@@ -8,25 +8,52 @@ export default function UserNavbar() {
   const isChatbot = location.pathname.includes("chatbot");
 
   return (
-    <div className="h-screen w-full bg-gray-100">
+    <div className="h-screen w-full bg-slate-50">
       {/* ---------- NAVBAR ---------- */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-gradient-to-r from-cyan-500 to-green-400 shadow-lg flex items-center justify-between px-6 text-white rounded-b-xl">
-        <h1 className="text-2xl font-bold tracking-wide">CuraMind</h1>
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8">
+        
+        {/* BRANDING */}
+        <Link to="/userpannel" className="flex items-center gap-2 group">
+          <div className="bg-emerald-600 p-1.5 rounded-lg transition-transform group-hover:scale-105">
+            <Stethoscope size={20} className="text-white" />
+          </div>
+          <h1 className="text-xl font-black text-slate-800 tracking-tight">CuraMind</h1>
+        </Link>
 
-        <div className="flex gap-3">
+        {/* NAVIGATION ACTIONS */}
+        <div className="flex items-center gap-6">
+          
+          {/* Dashboard Link */}
+          <button
+            onClick={() => navigate("/userpannel")}
+            className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors ${
+              location.pathname === "/userpannel" ? "text-emerald-600" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <LayoutDashboard size={16} />
+            Dashboard
+          </button>
+
+          {/* Profile Link */}
           <button
             onClick={() => navigate("/userpannel/Userprofile")}
-            className="flex items-center gap-2 bg-black/20 px-4 py-2 rounded-lg hover:bg-red-500 transition"
+            className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors ${
+              location.pathname.includes("Userprofile") ? "text-emerald-600" : "text-slate-400 hover:text-slate-600"
+            }`}
           >
-            <User size={18} />
+            <User size={16} />
             Profile
           </button>
 
+          {/* Vertical Divider */}
+          <div className="h-6 w-[1px] bg-slate-200"></div>
+
+          {/* Logout - Elegant red hover, not solid red */}
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 bg-black/20 px-4 py-2 rounded-lg hover:bg-red-500 transition"
+            className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors"
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             Logout
           </button>
         </div>
@@ -34,11 +61,13 @@ export default function UserNavbar() {
 
       {/* ---------- PAGE CONTENT ---------- */}
       <main
-        className={`pt-16 h-[calc(100vh-4rem)] ${
+        className={`pt-16 h-full ${
           isChatbot ? "overflow-hidden" : "overflow-y-auto"
         }`}
       >
-        <Outlet />
+        <div className={isChatbot ? "h-full" : "max-w-7xl mx-auto"}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

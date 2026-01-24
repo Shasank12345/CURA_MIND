@@ -1,0 +1,96 @@
+[
+  {
+    "id": "V0_AGE",
+    "ui_type": "numeric_input",
+    "content": {
+      "question": "What is your Age?",
+      "helper": "The Ottawa Ankle Rules apply specifically to patients aged 18 to 55.",
+      "image_key": "age_input.png"
+    },
+    "logic": {
+      "min_valid": 18,
+      "max_valid": 55,
+      "out_of_range_value": 1
+    }
+  },
+  {
+    "id": "V1_ACCIDENT",
+    "ui_type": "choice_select",
+    "content": {
+      "question": "Was this a high-impact accident?",
+      "helper": "Examples: A car/bike accident, falling from a height (ladder/roof), or being struck by a heavy object.",
+      "image_key": "trauma_reference.png"
+    },
+    "logic": { "yes_value": 1, "no_value": 0 }
+  },
+  {
+    "id": "V2_WALKING",
+    "ui_type": "binary_toggle",
+    "content": {
+      "question": "Can you take 4 steps right now?",
+      "helper": "Try to walk 4 steps. If you cannot put weight on the foot at all or must stop before 4 steps, select NO.",
+      "image_key": "4_step_test.png"
+    },
+    "logic": { "yes_value": 0, "no_value": 1 }
+  },
+  {
+    "id": "V3_LATERAL",
+    "ui_type": "binary_toggle",
+    "content": {
+      "question": "Does the outer ankle bone hurt?",
+      "helper": "Touch the bony bump facing AWAY from your body. Press the BACK EDGE firmly. Is there sharp pain?",
+      "image_key": "lateral_bone.png"
+    },
+    "logic": { "yes_value": 1, "no_value": 0 }
+  },
+  {
+    "id": "V3_MEDIAL",
+    "ui_type": "binary_toggle",
+    "content": {
+      "question": "Does the inner ankle bone hurt?",
+      "helper": "Touch the bony bump facing your OTHER LEG. Press the BACK EDGE firmly. Is there sharp pain?",
+      "image_key": "medial_bone.png"
+    },
+    "logic": { "yes_value": 1, "no_value": 0 }
+  },
+  {
+    "id": "V4_MIDFOOT",
+    "ui_type": "binary_toggle",
+    "content": {
+      "question": "Does the outer side of your foot hurt when pressed?",
+      "helper": "Run your finger along the outside edge of your foot. Halfway between your pinky toe and your heel, you will feel a hard, bony bump. Press that bump firmly. Does it hurt?",
+      "image_key": "midfoot_bone.png"
+    },
+    "logic": { "yes_value": 1, "no_value": 0 }
+  },
+  {
+    "id": "V4_NAVICULAR",
+    "ui_type": "binary_toggle",
+    "content": {
+      "question": "Does the inner arch bone hurt?",
+      "helper": "Find the big ankle bone on your inner side again. Move your finger about one inch toward your big toe and slightly down. You will feel another hard, bony bump there. Press it firmly. Does it hurt?",
+      "image_key": "navicular_bone.png"
+    },
+    "logic": { "yes_value": 1, "no_value": 0 }
+  },
+  {
+    "id": "V5_SWELLING",
+    "ui_type": "binary_toggle",
+    "content": {
+        "question": "is there significant swelling or bruising?",
+        "helper": "Compare both ankles. Is the injured one significantly larger or turning purple/blue?",
+        "image_key": "swelling_guide.png"
+    },
+    "logic": { "yes_value": 1, "no_value": 0 }
+   },
+   {
+    "id": "V6_STABILITY",
+    "ui_type": "binary_toggle",
+    "content": {
+        "question": "Does the ankle feel 'loose' or unstable?",
+        "helper": "Does it feel like the joint might give way or 'wobble' when you move it?",
+        "image_key": "stability_test.png"
+    },
+    "logic": { "yes_value": 1, "no_value": 0 }
+    }
+]

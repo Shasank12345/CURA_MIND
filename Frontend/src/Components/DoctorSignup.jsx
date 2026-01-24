@@ -10,7 +10,6 @@ const countries = [
   { code: "UK", dial: "+44", flag: "🇬🇧", regex: /^7\d{9}$/ },
 ];
 
-// Must match your triage.py logic exactly
 const specializations = [
   "General Practitioner",
   "Orthopedist",
@@ -21,13 +20,10 @@ const specializations = [
 export default function DoctorSignup() {
   const navigate = useNavigate();
 
-  // State Management
   const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
   const [country, setCountry] = useState("NP");
   const [phone, setPhone] = useState("");
-  const [phoneError, setPhoneError] = useState("");
   const [spec, setSpec] = useState("");
   const [license, setLicense] = useState("");
   const [dob, setDob] = useState("");
@@ -41,7 +37,6 @@ export default function DoctorSignup() {
     if (!file) return;
     if (file.size > 200 * 1024) {
       toast.error("License photo must be less than 200 KB");
-      e.target.value = "";
       return;
     }
     setLicensePhoto(file);
@@ -50,124 +45,112 @@ export default function DoctorSignup() {
 
   const handleSignup = async () => {
     const selectedCountry = countries.find((c) => c.code === country);
-
-    // Strict Validations
+    
+    // Validation
     if (!fullname.trim()) return toast.error("Enter full name");
-    if (!email || emailError) return toast.error("Enter valid email");
-    if (!phone || !selectedCountry.regex.test(phone)) {
-      setPhoneError("Invalid phone format");
-      return;
-    }
+    if (!email.includes("@")) return toast.error("Enter valid email");
+    if (!phone || !selectedCountry.regex.test(phone)) return toast.error("Invalid phone format");
     if (!spec) return toast.error("Select your specialization");
     if (!license.trim()) return toast.error("Enter license number");
     if (!dob) return toast.error("Select date of birth");
-    if (bio.length < 50) return toast.error("Bio must be at least 50 characters");
     if (!licensePhoto) return toast.error("Upload license photo");
 
     const fullPhoneNumber = `${selectedCountry.dial}${phone}`;
 
+    // DATA KEYS MUST MATCH BACKEND EXACTLY
     const formData = new FormData();
     formData.append("Full_Name", fullname);
     formData.append("Email", email);
     formData.append("Phone_Number", fullPhoneNumber);
-    formData.append("Spec", spec);
-    formData.append("License_no", license);
+    formData.append("Specialization", spec); // Matches backend data.get('Specialization')
+    formData.append("License_No", license);   // Matches backend data.get('License_No')
     formData.append("DOB", dob);
     formData.append("bio_summary", bio);
     formData.append("hospital_name", hospital);
     formData.append("role", "Doctor");
-    formData.append("licenseImage", licensePhoto);
+    formData.append("License_Img", licensePhoto); // Matches backend request.files['License_Img']
 
     try {
       const res = await fetch("http://localhost:5000/auth/sign_up", {
         method: "POST",
-        body: formData,
+        body: formData, // Browser sets Content-Type to multipart/form-data automatically
       });
 
       const data = await res.json();
       if (res.status === 201) {
-        toast.success("Signup successful! Waiting for admin approval.");
+        toast.success("Registration submitted for Admin review.");
         navigate("/Login");
       } else {
         toast.error(data.error || "Signup failed");
       }
-    } catch {
-      toast.error("Server connection failed");
+    } catch (err) {
+      toast.error("Connection to server failed");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl">
-        <h1 className="text-3xl font-bold text-center mb-6 text-indigo-700">Medical Practitioner Signup</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="bg-white p-10 rounded-3xl shadow-xl w-full max-w-2xl border border-gray-100">
+        <h1 className="text-3xl font-black text-center mb-8 text-indigo-900 uppercase tracking-tight">Doctor Registration</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Full Name */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
-            <label className="block text-sm font-bold mb-1">Full Name</label>
-            <input type="text" value={fullname} onChange={(e) => setFullname(e.target.value)} className="w-full p-2 border rounded-md" placeholder="Dr. John Doe" />
+            <label className="text-xs font-black text-gray-400 uppercase mb-2 block">Full Name</label>
+            <input type="text" value={fullname} onChange={(e) => setFullname(e.target.value)} className="w-full p-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500" placeholder="Dr. Jane Doe" />
           </div>
 
-          {/* Email */}
           <div>
-            <label className="block text-sm font-bold mb-1">Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={`w-full p-2 border rounded-md ${emailError ? 'border-red-500' : ''}`} />
+            <label className="text-xs font-black text-gray-400 uppercase mb-2 block">Email Address</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-3 bg-gray-50 border-none rounded-xl" placeholder="jane@hospital.com" />
           </div>
 
-          {/* Phone */}
           <div>
-            <label className="block text-sm font-bold mb-1">Phone Number</label>
-            <div className="flex gap-1">
-              <select value={country} onChange={(e) => setCountry(e.target.value)} className="p-2 border rounded-md bg-gray-50 text-xs">
+            <label className="text-xs font-black text-gray-400 uppercase mb-2 block">Mobile Number</label>
+            <div className="flex gap-2">
+              <select value={country} onChange={(e) => setCountry(e.target.value)} className="p-3 bg-gray-50 border-none rounded-xl text-sm">
                 {countries.map(c => <option key={c.code} value={c.code}>{c.flag} {c.dial}</option>)}
               </select>
-              <input type="text" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))} className="flex-1 p-2 border rounded-md" placeholder="98XXXXXXXX" />
+              <input type="text" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))} className="flex-1 p-3 bg-gray-50 border-none rounded-xl" placeholder="98XXXXXXXX" />
             </div>
           </div>
 
-          {/* Specialization Dropdown */}
           <div>
-            <label className="block text-sm font-bold mb-1">Specialization</label>
-            <select value={spec} onChange={(e) => setSpec(e.target.value)} className="w-full p-2 border rounded-md">
-              <option value="">Select Specialty</option>
+            <label className="text-xs font-black text-gray-400 uppercase mb-2 block">Primary Specialty</label>
+            <select value={spec} onChange={(e) => setSpec(e.target.value)} className="w-full p-3 bg-gray-50 border-none rounded-xl">
+              <option value="">Select...</option>
               {specializations.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          {/* License Number */}
           <div>
-            <label className="block text-sm font-bold mb-1">License Number</label>
-            <input type="text" value={license} onChange={(e) => setLicense(e.target.value)} className="w-full p-2 border rounded-md" />
+            <label className="text-xs font-black text-gray-400 uppercase mb-2 block">Medical License ID</label>
+            <input type="text" value={license} onChange={(e) => setLicense(e.target.value)} className="w-full p-3 bg-gray-50 border-none rounded-xl font-mono" />
           </div>
 
-          {/* Hospital Name */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-bold mb-1">Hospital / Clinic Affiliation</label>
-            <input type="text" value={hospital} onChange={(e) => setHospital(e.target.value)} className="w-full p-2 border rounded-md" placeholder="e.g. Kathmandu Medical Center" />
+            <label className="text-xs font-black text-gray-400 uppercase mb-2 block">Affiliated Hospital</label>
+            <input type="text" value={hospital} onChange={(e) => setHospital(e.target.value)} className="w-full p-3 bg-gray-50 border-none rounded-xl" placeholder="Medical Center Name" />
           </div>
 
-          {/* Bio Summary */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-bold mb-1">Professional Bio (Clinical Summary)</label>
-            <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="w-full p-2 border rounded-md h-24" placeholder="Describe your experience with trauma, surgery, or general practice..."></textarea>
+            <label className="text-xs font-black text-gray-400 uppercase mb-2 block">Professional Summary</label>
+            <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="w-full p-3 bg-gray-50 border-none rounded-xl h-24 resize-none" placeholder="Briefly describe your clinical background..."></textarea>
           </div>
 
-          {/* DOB */}
           <div>
-            <label className="block text-sm font-bold mb-1">Date of Birth</label>
-            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="w-full p-2 border rounded-md" />
+            <label className="text-xs font-black text-gray-400 uppercase mb-2 block">Date of Birth</label>
+            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="w-full p-3 bg-gray-50 border-none rounded-xl" />
           </div>
 
-          {/* License Upload */}
           <div>
-            <label className="block text-sm font-bold mb-1">License Photo (Max 200KB)</label>
-            <input type="file" accept="image/*" onChange={handleLicensePhoto} className="w-full text-xs" />
-            {preview && <img src={preview} alt="Preview" className="mt-2 h-16 w-auto rounded border" />}
+            <label className="text-xs font-black text-gray-400 uppercase mb-2 block">License Document</label>
+            <input type="file" accept="image/*" onChange={handleLicensePhoto} className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+            {preview && <img src={preview} alt="Preview" className="mt-4 h-20 w-auto rounded-lg shadow-sm" />}
           </div>
         </div>
 
-        <button onClick={handleSignup} className="w-full mt-6 bg-indigo-600 text-white p-3 rounded-lg font-bold hover:bg-indigo-700 transition duration-200">
-          SUBMIT REGISTRATION
+        <button onClick={handleSignup} className="w-full mt-10 bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95">
+          Submit Application
         </button>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 // Auth & Public
 import Login from "./Components/Login";
@@ -15,7 +15,8 @@ import Sidebar from './Components/Admin/Sidebar'
 import Dashboard from "./Components/Admin/Dashboard";
 import DoctorDetail from "./Components/Admin/DoctorDetail";
 import Rejectoption from './Components/Admin/Rejectoption';
-import User1 from './Components/Admin/User1'
+// import CombinedAudit from "./Components/Admin/CombinedAudit";
+// import User1 from "./Components/Admin/User1";
 import DoctorResponse1 from './Components/Admin/DoctorResponse1'
 import DoctorResponse2 from "./Components/Admin/DoctorResponse2";
 
@@ -35,6 +36,7 @@ import Onetoonechat from "./Components/Onetoonechat";
 // Toast notifications
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import User1 from "./Components/Admin/User1";
 
 function App() {
   return (
@@ -50,18 +52,22 @@ function App() {
 
         {/* Admin Routes */}
         <Route path="/adminpannel" element={<Sidebar />}>
-          <Route index element={<Dashboard />} /> 
+          {/* Use Navigate to prevent landing on a blank sidebar */}
+          <Route index element={<Navigate to="dashboard" replace />} /> 
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="rejectoption" element={<Rejectoption />} />
           <Route path="doctordetail" element={<DoctorDetail />} />
-          <Route path="user1" element={<User1 />} />
+          
+          {/* Use the Combined View for Triage Audit */}
+          <Route path="User1" element={<User1/>} />
+          
           <Route path="doctorresponse1" element={<DoctorResponse1 />} />
           <Route path="doctorresponse2" element={<DoctorResponse2 />} />
         </Route>
 
         {/* User Routes */}
         <Route path="/userpannel" element={<Navbar />}>
-          <Route index element={<UserDashboard />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="chatbot" element={<Chatbot />} />
           <Route path="onetoonechat" element={<Onetoonechat />} />
@@ -71,7 +77,7 @@ function App() {
 
         {/* Doctor Routes */}
         <Route path="/doctordashboard" element={<DoctorNav />}>
-          <Route index element={<DoctorDashboard />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DoctorDashboard />} />
           <Route path="onetoonechat" element={<Onetoonechat />} />
           <Route path="editprofile" element={<DoctorProfileEdit />} />

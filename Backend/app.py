@@ -9,10 +9,7 @@ from model import Account
 app = Flask(__name__)
 app.config.from_object(Config)
 from flask_cors import CORS
-CORS(app, supports_credentials=True, origins=[
-    "http://localhost:5173",
-    "http://127.0.0.1:5173"
-])
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 
 db.init_app(app)
 mail.init_app(app)
@@ -24,7 +21,6 @@ app.config['SESSION_COOKIE_SECURE'] = False
 register_routes(app)
 
 def initialize_system():
-    """Handles database creation and seed data."""
     with app.app_context():
         
         db.create_all()

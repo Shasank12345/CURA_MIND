@@ -8,7 +8,6 @@ export default function DoctorResponse1() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // UPDATED: Endpoint changed to 'unverified' to match your admin.py logic
     axios.get('http://localhost:5000/admin/get_doctors/unverified', { withCredentials: true })
       .then(res => {
         setDoctorData(res.data);

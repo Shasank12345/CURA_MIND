@@ -2,6 +2,43 @@ from extension import mail
 from flask_mail import Message
 from flask import current_app
 import random, string
+import os
+import json
+from datetime import datetime
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+JSON_PATH = os.path.join(current_dir, 'data', 'ui_mapping.json')
+
+def load_ui_data():
+    try:
+        if not os.path.exists(JSON_PATH):
+       
+            return {}
+        with open(JSON_PATH, 'r') as f:
+            data = json.load(f)
+            print(f"SUCCESS: Loaded mapping from {JSON_PATH}")
+            return data
+    except Exception as e:
+       
+        print(f"CRITICAL ERROR: Failed to parse ui_mapping.json: {e}")
+        return {}
+
+
+UI_DATA = load_ui_data()
+def calculate_age(dob):
+    if not dob:
+        return 0
+    today = datetime.utcnow().date()
+    years = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    if years < 1:
+        total_months = (today.year - dob.year) * 12 + (today.month - dob.month)
+        if today.day < dob.day:
+            total_months -= 1
+        return round(total_months / 12, 2)
+    
+    return float(years)
+
+UI_DATA = load_ui_data()
 
 def gen_pass(length=5):
     chars = string.ascii_letters + string.digits
