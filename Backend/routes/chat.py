@@ -19,14 +19,12 @@ def handle_chat():
     user = User.query.filter_by(acc_id=acc_id).first()
     if not user: return jsonify({"reply": "User not found."}), 404
 
-    # 1. GET THE LATEST UNFINISHED SESSION
     session = TriageSession.query.filter_by(user_id=user.id, final_flag=None).order_by(TriageSession.id.desc()).first()
     
     if not session:
         age = float(calculate_age(user.dob))
         session = TriageSession(user_id=user.id, v0_age=age)
-        
-        # Initialize all 8 logic columns to None to ensure a clean start
+
         for q in UI_DATA:
             if q['id'] == "V0_AGE": continue
             setattr(session, q['id'].lower(), None)
@@ -35,8 +33,6 @@ def handle_chat():
         db.session.commit()
         db.session.refresh(session)
         print(f"--- NEW SESSION CREATED: ID {session.id} ---")
-
-    # 2. PEDIATRIC TRAP (Strict Type Casting + All Parameters)
     if session.v0_age is not None and float(session.v0_age) < 18.0:
         pediatric_snapshot = {
             'V0_AGE': float(session.v0_age),
@@ -46,15 +42,12 @@ def handle_chat():
         }
         return finalize_session(session, "YELLOW", pediatric_snapshot)
 
-    # 3. IDENTIFY CURRENT TARGET QUESTION
     current_q = None
     for q in UI_DATA:
         if q['id'] == "V0_AGE": continue
         if getattr(session, q['id'].lower()) is None:
             current_q = q
             break
-
-    # 4. SAVE INPUT WITH TYPE CASTING
     if current_q and user_input != "":
         is_yes = any(word in user_input for word in ['yes', 'yeah', 'yep', 'true', '1'])
         val = int(current_q['logic']['yes_value'] if is_yes else current_q['logic']['no_value'])
@@ -62,15 +55,12 @@ def handle_chat():
         setattr(session, current_q['id'].lower(), val)
         db.session.commit()
 
-        # Immediate Red Flag Check for High-Impact Accident
         if current_q['id'] == "V1_ACCIDENT" and val == 1:
             return finalize_session(session, "RED", {
                 'V1_ACCIDENT': 1, 'V0_AGE': float(session.v0_age),
                 'V2_WALKING': 0, 'V3_LATERAL': 0, 'V3_MEDIAL': 0,
                 'V4_NAVICULAR': 0, 'V4_MIDFOOT': 0, 'V5_SWELLING': 0, 'V6_STABILITY': 0
             })
-
-    # 5. FIND NEXT QUESTION FOR RESPONSE
     next_q = None
     for q in UI_DATA:
         if q['id'] == "V0_AGE": continue
@@ -86,8 +76,6 @@ def handle_chat():
             "image": next_q['content']['image_key'],
             "step": next_q['id']
         })
-
-    # 6. FINAL TRIAGE (No questions left)
     assessment_data = {q['id']: getattr(session, q['id'].lower()) for q in UI_DATA}
     assessment_data['V0_AGE'] = float(session.v0_age)
     
@@ -106,12 +94,10 @@ def finalize_session(session, flag, data):
         session.v3_medial    = int(data.get('V3_MEDIAL', 0))
         session.v4_navicular = int(data.get('V4_NAVICULAR', 0))
         session.v4_midfoot   = int(data.get('V4_MIDFOOT', 0))
-        session.v5_swelling  = int(data.get('V5_SWELLING', 0)) # Fixed
-        session.v6_stability = int(data.get('V6_STABILITY', 0)) # Fixed
+        session.v5_swelling  = int(data.get('V5_SWELLING', 0)) 
+        session.v6_stability = int(data.get('V6_STABILITY', 0)) 
         
         session.final_flag   = str(flag)
-
-        # Generate SOAP Notes
         soap = gen_soap_note(data, flag)
         session.soap_s = str(soap.get('subjective', 'N/A'))
         session.soap_o = str(soap.get('objective', 'N/A'))

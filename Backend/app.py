@@ -16,7 +16,8 @@ mail.init_app(app)
 
 app.secret_key = app.config.get('SECRET_KEY', 'dev_key_only_change_in_production')
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SECURE'] = False 
+app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_SAMESITE']='lax'
 
 register_routes(app)
 

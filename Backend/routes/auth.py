@@ -131,17 +131,15 @@ def login():
         return jsonify({"error": "Account pending verification"}), 403
 
     session.clear()
-    session['account_id'] = account.id
+    session['account_id'] = account.id 
     session['role'] = account.role
-    session['email'] = account.email
-
+    session.permanent = True  # This triggers the lifetime set in app.config
+    
     return jsonify({
         "message": "Login successful",
         "role": account.role,
-        "first_login": account.is_temp_password,
-        "user": {"email": account.email, "id": account.id}
+        "user": {"id": account.id}
     }), 200
-
 @auth.route("/change_password", methods=["POST"])
 def change_password():
     
