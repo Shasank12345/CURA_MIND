@@ -26,12 +26,15 @@ import UserDashboard from "./Components/Module-2/UserDashboard";
 import Chatbot from "./Components/Module-2/Chatbot";
 import UserProfile from "./Components/Module-2/UserProfile";
 import UserProfileEdit from "./Components/Module-2/ProfileEdit";
+import AvailableDoctorList from "./Components/Module-2/Aviabledoctorlist";
+
 
 // Doctor (Module 3)
 import DoctorNav from "./Components/Module-3/DoctorNav";
 import DoctorDashboard from "./Components/Module-3/DoctorDashboard";
 import DoctorProfileEdit from "./Components/Module-3/EditProfile";
 import Onetoonechat from "./Components/Onetoonechat"; 
+import Profile from "./Components/Module-3/Profile";
 
 // Toast notifications
 import { ToastContainer } from "react-toastify";
@@ -81,6 +84,7 @@ function App() {
           <Route path="dashboard" element={<DoctorDashboard />} />
           <Route path="onetoonechat" element={<Onetoonechat />} />
           <Route path="editprofile" element={<DoctorProfileEdit />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
 
