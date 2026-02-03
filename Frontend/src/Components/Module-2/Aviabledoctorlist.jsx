@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Phone, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 /* ================= MOCK DATA ================= */
 
@@ -24,18 +25,19 @@ const doctors = [
   },
 ];
 
-/* ================= COMPONENT ================= */
+
 
 export default function AvailableDoctorList() {
-  const [hoveredDoctor, setHoveredDoctor] = useState(null);
+  const [hoveredDoctor, setHoveredDoctor] = useState(null)
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-slate-50 flex justify-center px-4 pt-20 pb-10">
       
-      {/* Main Container */}
+     
       <div className="w-full max-w-4xl bg-white border border-gray-200 rounded-2xl shadow-md p-8">
         
-        {/* Header */}
+       
         <div className="mb-8 border-b border-gray-200 pb-4">
           <h1 className="text-2xl font-bold text-gray-900">
             Available Doctors
@@ -45,7 +47,7 @@ export default function AvailableDoctorList() {
           </p>
         </div>
 
-        {/* Doctor List */}
+        
         <div className="space-y-5">
           {doctors.map((doctor) => (
             <div
@@ -54,7 +56,7 @@ export default function AvailableDoctorList() {
                          p-5 rounded-xl border border-gray-200 bg-gray-50
                          hover:bg-white hover:shadow-lg hover:z-20 transition-all duration-200"
             >
-              {/* Doctor Info */}
+             
               <div>
                 <p className="text-lg font-semibold text-gray-900">
                   {doctor.name}
@@ -70,8 +72,9 @@ export default function AvailableDoctorList() {
                 </p>
               </div>
 
-              {/* Profile Button */}
-              <div className="relative">
+              
+              <div className="relative flex items-center gap-3">
+               
                 <button
                   onMouseEnter={() => setHoveredDoctor(doctor)}
                   onMouseLeave={() => setHoveredDoctor(null)}
@@ -84,7 +87,18 @@ export default function AvailableDoctorList() {
                   View Profile
                 </button>
 
-                {/* Hover Profile Card */}
+               
+                <button
+                onClick={() => navigate("/userpannel/onetoonechat")}
+                  className="flex items-center gap-2 px-4 py-2.5 
+                             text-sm font-semibold bg-green-600 text-white 
+                             rounded-lg border border-green-700
+                             hover:bg-green-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  💬 Chat
+                </button>
+
+              
                 {hoveredDoctor?.id === doctor.id && (
                   <div
                     className="absolute right-0 top-12 z-[9999] w-72 
@@ -110,11 +124,15 @@ export default function AvailableDoctorList() {
                     <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-700 space-y-2">
                       <p className="flex justify-between">
                         <span className="text-gray-500">Hospital:</span>
-                        <span className="font-medium text-right">{doctor.hospital}</span>
+                        <span className="font-medium text-right">
+                          {doctor.hospital}
+                        </span>
                       </p>
                       <p className="flex justify-between">
                         <span className="text-gray-500">Experience:</span>
-                        <span className="font-medium">{doctor.experience}</span>
+                        <span className="font-medium">
+                          {doctor.experience}
+                        </span>
                       </p>
                       <div className="flex items-center gap-2 pt-1 text-gray-600">
                         <Phone size={14} className="text-blue-500" />

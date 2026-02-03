@@ -73,9 +73,11 @@ function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="chatbot" element={<Chatbot />} />
-          <Route path="onetoonechat" element={<Onetoonechat />} />
+            <Route path="Aviabledoctorlist" element={<AvailableDoctorList />} />
           <Route path="userprofile" element={<UserProfile />} />
           <Route path="profileedit" element={<UserProfileEdit />} />
+          <Route path="onetoonechat" element={<Onetoonechat />} />
+          
         </Route>
 
         {/* Doctor Routes */}

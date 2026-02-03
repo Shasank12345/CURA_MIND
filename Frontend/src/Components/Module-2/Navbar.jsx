@@ -36,7 +36,7 @@ export default function UserNavbar() {
 
           {/* Profile Link */}
           <button
-            onClick={() => navigate("/userpannel/Userprofile")}
+            onClick={() => navigate("/userpannel/userprofile")}
             className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors ${
               location.pathname.includes("Userprofile") ? "text-emerald-600" : "text-slate-400 hover:text-slate-600"
             }`}

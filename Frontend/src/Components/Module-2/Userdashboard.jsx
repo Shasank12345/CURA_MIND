@@ -86,7 +86,7 @@ export default function UserDashboard() {
           <FileText className="text-white/40 group-hover:text-white transition-colors" size={40} />
         </Link>
 
-        <Link to="/userpannel/onetoonechat" className="bg-slate-800 p-8 rounded-2xl flex items-center justify-between group transition hover:bg-slate-900 shadow-sm">
+        <Link to="/userpannel/Aviabledoctorlist" className="bg-slate-800 p-8 rounded-2xl flex items-center justify-between group transition hover:bg-slate-900 shadow-sm">
           <div>
             <h3 className="text-white font-black text-xl">CONSULT DOCTOR</h3>
             <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mt-1 underline">Chat with Specialist</p>
