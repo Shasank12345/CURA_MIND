@@ -27,6 +27,7 @@ import Chatbot from "./Components/Module-2/Chatbot";
 import UserProfile from "./Components/Module-2/UserProfile";
 import UserProfileEdit from "./Components/Module-2/ProfileEdit";
 import AvailableDoctorList from "./Components/Module-2/Aviabledoctorlist";
+import WaitingRoom from "./Components/Module-2/Waitingroom";
 
 
 // Doctor (Module 3)
@@ -78,6 +79,7 @@ function App() {
           <Route path="userprofile" element={<UserProfile />} />
           <Route path="profileedit" element={<UserProfileEdit />} />
           <Route path="onetoonechat" element={<Onetoonechat />} />
+          <Route path="waitingroom" element={<WaitingRoom />} />
           
         </Route>
 
