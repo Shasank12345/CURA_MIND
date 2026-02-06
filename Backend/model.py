@@ -70,3 +70,24 @@ class Otp(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime, nullable=False)
     used = db.Column(db.Boolean, default=False)
+
+
+
+class Consultation(db.Model):
+    __tablename__ = 'consultations'
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Links
+    patient_id = db.Column(db.Integer, db.ForeignKey('user_profiles.id', ondelete='CASCADE'), nullable=False)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctor_profiles.id', ondelete='CASCADE'), nullable=False)
+    triage_id = db.Column(db.Integer, db.ForeignKey('triage_sessions.id', ondelete='CASCADE'), nullable=False)
+    
+    # State Management
+    # pending: waiting for doctor, accepted: chat active, rejected: doctor said no
+    status = db.Column(db.String(20), default='pending', nullable=False)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships for easy access in the Dashboard
+    # This allows: consultation.triage_session.soap_s
+    triage_session = db.relationship('TriageSession', backref='consultations')

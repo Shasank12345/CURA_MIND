@@ -1,6 +1,6 @@
 
-from flask import Blueprint,jsonify,session
-from model import User,Account,TriageSession
+from flask import Blueprint,jsonify,session,request
+from model import User,Account,TriageSession,Consultation
 from extension import db
 
 user=Blueprint('/user',__name__)
@@ -53,3 +53,55 @@ def get_triage_history():
             "stability": s.v6_stability
         }
     } for s in sessions]), 200
+
+
+@user.route('/consultation/request', methods=['POST'])
+def request_consultation():
+    # Use your existing session logic
+    acc_id = session.get("account_id")
+    if not acc_id:
+        return jsonify({"error": "Login required"}), 401
+
+    data = request.json
+    doctor_id = data.get('doctor_id')
+    triage_id = data.get('triage_id')
+
+    if not doctor_id or not triage_id:
+        return jsonify({"error": "Missing doctor or triage reference"}), 400
+
+    # Retrieve the specific User Profile linked to this Account
+    patient_profile = User.query.filter_by(acc_id=acc_id).first()
+    if not patient_profile:
+        return jsonify({"error": "User profile not found"}), 404
+
+    # Create the consultation record
+    new_request = Consultation(
+        patient_id=patient_profile.id, # Foreign Key to user_profiles
+        doctor_id=doctor_id,           # Foreign Key to doctor_profiles
+        triage_id=triage_id,           # Foreign Key to triage_sessions
+        status='pending'
+    )
+
+    try:
+        db.session.add(new_request)
+        db.session.commit()
+        return jsonify({
+            "message": "Request sent successfully",
+            "consultation_id": new_request.id,
+            "status": "pending"
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    
+
+@user.route('/consultation/status/<int:consult_id>', methods=['GET'])
+def check_consult_status(consult_id):
+    consult = Consultation.query.get(consult_id)
+    if not consult:
+        return jsonify({"error": "Not found"}), 404
+        
+    return jsonify({
+        "status": consult.status,
+        "doctor_name": consult.triage_session.doctor.full_name if consult.status == 'accepted' else None
+    }), 200

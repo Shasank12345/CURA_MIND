@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Phone, User, MessageCircle, Hospital, Award, Info } from "lucide-react";
+import { Phone, User, MessageCircle, Hospital, Award, Info, Loader2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -8,19 +8,18 @@ const API_BASE = "http://127.0.0.1:5000";
 export default function AvailableDoctorList() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [requestingId, setRequestingId] = useState(null); // Track which doctor is being pinged
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract specialty and triage_id from URL
   const queryParams = new URLSearchParams(location.search);
   const specialtyFilter = queryParams.get("specialty");
-  const triageId = queryParams.get("triage_id"); // CRITICAL: Link to the triage record
+  const triageId = queryParams.get("triage_id");
 
   useEffect(() => {
     const fetchDoctors = async () => {
       setLoading(true);
       try {
-        // Updated URL construction to handle specialty filtering at the API level
         const url = specialtyFilter 
           ? `${API_BASE}/doctor/available?specialty=${specialtyFilter}`
           : `${API_BASE}/doctor/available`;
@@ -43,11 +42,51 @@ export default function AvailableDoctorList() {
     fetchDoctors();
   }, [specialtyFilter]);
 
+  // NEW: Logical Handler for the Consultation Handshake
+  const handleConsultClick = async (doctorId) => {
+    if (!triageId) {
+      toast.error("Triage session missing. Please restart assessment.");
+      return;
+    }
+
+    setRequestingId(doctorId);
+
+    try {
+      const res = await fetch(`${API_BASE}/user/consultation/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          doctor_id: doctorId,
+          triage_id: triageId
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("Request sent! Waiting for doctor to review...");
+        // Redirect to a waiting room where we poll for 'accepted' status
+        navigate("/userpannel/waiting-room", { 
+          state: { 
+            consultationId: data.consultation_id,
+            doctorId: doctorId 
+          } 
+        });
+      } else {
+        toast.error(data.error || "Request failed");
+      }
+    } catch (err) {
+      toast.error("Network error. Could not reach server.");
+    } finally {
+      setRequestingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex justify-center px-4 pt-20 pb-10 font-sans">
       <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-[2rem] shadow-xl p-8">
         
-        {/* RECOMMENDATION BANNER FOR YELLOW FLAGS */}
+        {/* AI RECOMMENDATION BANNER */}
         {specialtyFilter && (
           <div className="mb-6 flex items-center gap-4 bg-emerald-50 border border-emerald-100 p-4 rounded-2xl animate-in slide-in-from-top duration-500">
             <div className="bg-emerald-600 p-2 rounded-lg text-white">
@@ -120,16 +159,16 @@ export default function AvailableDoctorList() {
                   </button>
                   
                   <button
-                    onClick={() => navigate("/userpannel/onetoonechat", { 
-                        state: { 
-                            doctorId: doctor.id, 
-                            triageId: triageId // PASSING THE TRIAGE ID TO THE CHAT
-                        } 
-                    })}
-                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white text-sm font-black rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95"
+                    onClick={() => handleConsultClick(doctor.id)}
+                    disabled={requestingId !== null}
+                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white text-sm font-black rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95 disabled:bg-slate-300 disabled:shadow-none"
                   >
-                    <MessageCircle size={18} />
-                    CONSULT NOW
+                    {requestingId === doctor.id ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <MessageCircle size={18} />
+                    )}
+                    {requestingId === doctor.id ? "SENDING..." : "CONSULT NOW"}
                   </button>
                 </div>
               </div>
