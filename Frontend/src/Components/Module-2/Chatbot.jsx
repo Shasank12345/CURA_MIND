@@ -71,18 +71,31 @@ export default function Chatbot() {
       setCurrentMeta(data);
 
       if (data.status === "complete") {
+        // SAVE TRIAGE ID IN SESSION STORAGE
+        if (data.triage_id) {
+            sessionStorage.setItem("active_triage_id", data.triage_id);
+        }
+
         setChats(prev => prev.map(c => 
           c.id === activeChatId ? { ...c, status: "complete", flag: data.flag } : c
         ));
 
-        // CRITICAL: Handle Age 0 / Pediatric / High Risk
-        if (data.flag === "RED" || data.flag === "YELLOW") {
+        if (data.flag === "RED") {
+          // RED = High Risk Injury. Emergency Modal.
           setEmergencyData(data.content);
           setShowEmergency(true);
-          // We STOP here. No redirect.
-        } else {
+        } 
+        else if (data.flag === "YELLOW") {
+          // YELLOW = Pediatric or Specialist Required. Redirect to Doctors.
+          toast.warning("Specialist intervention required. Finding available doctors...");
+          setTimeout(() => {
+            navigate(`/userpannel/Aviabledoctorlist?specialty=Orthopedics&triage_id=${data.triage_id}`);
+          }, 2500);
+        } 
+        else {
+          // GREEN = Low Risk.
           updateActiveChat({ sender: "bot", text: data.reply });
-          toast.success("Assessment Complete.");
+          toast.success("Assessment Complete: Low Risk.");
           setTimeout(() => navigate("/userpannel"), 2500);
         }
       } else {
@@ -108,7 +121,7 @@ export default function Chatbot() {
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
       
-      {/* EMERGENCY MODAL */}
+      {/* EMERGENCY MODAL (Primarily for RED Flags) */}
       {showEmergency && (
         <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-white rounded-[2.5rem] max-w-md w-full p-8 shadow-2xl border-4 border-red-500 text-center animate-in zoom-in duration-300">
@@ -116,10 +129,10 @@ export default function Chatbot() {
               <ShieldAlert size={48} className="text-red-600" />
             </div>
             <h2 className="text-2xl font-black text-slate-900 uppercase mb-2">
-              {activeChat?.flag === "RED" ? "Urgent X-Ray Required" : "Pediatric Specialist Needed"}
+              {activeChat?.flag === "RED" ? "Urgent X-Ray Required" : "Clinical Review Needed"}
             </h2>
             <p className="text-slate-600 mb-8 font-medium">
-              {emergencyData?.text || "The Ottawa Ankle Rules are not applicable for this age group. Please consult a specialist."}
+              {emergencyData?.text || "The automated triage indicates a high-risk factor. Immediate physical examination is advised."}
             </p>
 
             <div className="space-y-3">
@@ -147,9 +160,14 @@ export default function Chatbot() {
       {/* MAIN LAYOUT */}
       <main className="flex-1 flex flex-col relative bg-white">
         <header className="h-16 border-b flex items-center px-8 justify-between">
-            <h2 className="font-bold text-slate-700 uppercase tracking-widest text-xs">CuraMind AI Triage</h2>
+            <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white">
+                    <Activity size={18} />
+                </div>
+                <h2 className="font-bold text-slate-700 uppercase tracking-widest text-xs">CuraMind AI Triage</h2>
+            </div>
             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Analyzing
+               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Analyzing Live
             </div>
         </header>
 
@@ -169,11 +187,11 @@ export default function Chatbot() {
             {currentMeta && activeChat?.status === "active" && !loading && (
               <div className="max-w-md bg-white border border-emerald-100 rounded-3xl p-6 shadow-xl space-y-4 animate-in fade-in slide-in-from-bottom-4">
                 <div className="flex items-center gap-2 text-emerald-700 font-bold text-[10px] uppercase tracking-widest">
-                  <AlertCircle size={14} /> Response Needed
+                  <AlertCircle size={14} /> Clinical Response Needed
                 </div>
                 
                 {currentMeta.helper && (
-                  <p className="text-slate-500 text-xs leading-relaxed bg-slate-50 p-3 rounded-lg">
+                  <p className="text-slate-500 text-xs leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 italic">
                     {currentMeta.helper}
                   </p>
                 )}
@@ -182,12 +200,12 @@ export default function Chatbot() {
                   <button 
                     disabled={loading}
                     onClick={() => handleSendMessage("Yes")} 
-                    className="flex-1 bg-emerald-600 text-white font-bold py-4 rounded-xl hover:bg-emerald-700 transition-all shadow-md disabled:opacity-50"
+                    className="flex-1 bg-emerald-600 text-white font-bold py-4 rounded-xl hover:bg-emerald-700 transition-all shadow-md disabled:opacity-50 active:scale-95"
                   >YES</button>
                   <button 
                     disabled={loading}
                     onClick={() => handleSendMessage("No")} 
-                    className="flex-1 bg-slate-100 text-slate-600 font-bold py-4 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50"
+                    className="flex-1 bg-slate-100 text-slate-600 font-bold py-4 rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50 active:scale-95"
                   >NO</button>
                 </div>
               </div>
@@ -199,11 +217,11 @@ export default function Chatbot() {
         <footer className="p-6 bg-white border-t">
           <div className="max-w-3xl mx-auto flex gap-3">
             <input 
-              disabled={true} // Input disabled during triage logic
+              disabled={true} 
               value={input} 
               onChange={e => setInput(e.target.value)}
-              placeholder="Please use the buttons provided above..."
-              className="flex-1 p-4 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm"
+              placeholder="Please use the clinical options provided above..."
+              className="flex-1 p-4 rounded-xl border border-slate-200 bg-slate-50 outline-none text-sm italic"
             />
             <button disabled={true} className="p-4 bg-slate-200 text-white rounded-xl">
               <Send size={20} />

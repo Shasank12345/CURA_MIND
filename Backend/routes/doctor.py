@@ -54,8 +54,29 @@ def update():
         db.session.commit()
         return jsonify({
             "message": "Update successful",
-            "available": doc.is_available_online # Returns state to sync UI
+            "available": doc.is_available_online 
         }), 200
     except Exception:
         db.session.rollback()
         return jsonify({"error": "Database Error"}), 500
+    
+@doctor.route('/available', methods=['GET'])
+def get_available_doctors():
+    specialty = request.args.get('specialty')
+    
+    # Start with all online doctors
+    query = Doctor.query.filter_by(is_available_online=True)
+    
+    # Apply filter ONLY if specialty is provided
+    if specialty:
+        query = query.filter(Doctor.area_of_specialization.ilike(f"%{specialty}%"))
+        
+    available_docs = query.all()
+
+    return jsonify([{
+        "id": doc.acc_id,
+        "name": doc.full_name,
+        "specialization": doc.area_of_specialization,
+        "hospital": doc.hospital_name,
+        # "photo": doc.license_img # Or a specific photo field if you have one
+    } for doc in available_docs]), 200

@@ -1,149 +1,147 @@
-import { useState } from "react";
-import { Phone, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Phone, User, MessageCircle, Hospital, Award, Info } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 
-/* ================= MOCK DATA ================= */
-
-const doctors = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    phone: "+1 (555) 123-4567",
-    specialization: "Cardiology",
-    photo: "https://i.pravatar.cc/150?img=47",
-    experience: "10+ Years",
-    hospital: "City Care Hospital",
-  },
-  {
-    id: 2,
-    name: "Dr. Michael Brown",
-    phone: "+1 (555) 987-6543",
-    specialization: "Neurology",
-    photo: "https://i.pravatar.cc/150?img=12",
-    experience: "8 Years",
-    hospital: "Neuro Health Center",
-  },
-];
-
-
+const API_BASE = "http://127.0.0.1:5000";
 
 export default function AvailableDoctorList() {
-  const [hoveredDoctor, setHoveredDoctor] = useState(null)
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Extract specialty and triage_id from URL
+  const queryParams = new URLSearchParams(location.search);
+  const specialtyFilter = queryParams.get("specialty");
+  const triageId = queryParams.get("triage_id"); // CRITICAL: Link to the triage record
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      setLoading(true);
+      try {
+        // Updated URL construction to handle specialty filtering at the API level
+        const url = specialtyFilter 
+          ? `${API_BASE}/doctor/available?specialty=${specialtyFilter}`
+          : `${API_BASE}/doctor/available`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+        
+        if (res.ok) {
+          setDoctors(data);
+        } else {
+          toast.error(data.error || "Failed to load doctors");
+        }
+      } catch (err) {
+        toast.error("Server connection failed");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, [specialtyFilter]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex justify-center px-4 pt-20 pb-10">
-      
-     
-      <div className="w-full max-w-4xl bg-white border border-gray-200 rounded-2xl shadow-md p-8">
+    <div className="min-h-screen bg-slate-50 flex justify-center px-4 pt-20 pb-10 font-sans">
+      <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-[2rem] shadow-xl p-8">
         
-       
-        <div className="mb-8 border-b border-gray-200 pb-4">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Available Doctors
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            View and check doctor availability
-          </p>
-        </div>
+        {/* RECOMMENDATION BANNER FOR YELLOW FLAGS */}
+        {specialtyFilter && (
+          <div className="mb-6 flex items-center gap-4 bg-emerald-50 border border-emerald-100 p-4 rounded-2xl animate-in slide-in-from-top duration-500">
+            <div className="bg-emerald-600 p-2 rounded-lg text-white">
+              <Info size={20} />
+            </div>
+            <div>
+              <p className="text-xs font-black text-emerald-800 uppercase tracking-tight">AI Recommendation</p>
+              <p className="text-sm text-emerald-700 font-medium">
+                Based on your triage, we've found available <strong>{specialtyFilter}</strong> specialists for you.
+              </p>
+            </div>
+          </div>
+        )}
 
-        
-        <div className="space-y-5">
-          {doctors.map((doctor) => (
-            <div
-              key={doctor.id}
-              className="relative z-10 flex items-center justify-between 
-                         p-5 rounded-xl border border-gray-200 bg-gray-50
-                         hover:bg-white hover:shadow-lg hover:z-20 transition-all duration-200"
-            >
-             
-              <div>
-                <p className="text-lg font-semibold text-gray-900">
-                  {doctor.name}
-                </p>
+        <header className="mb-8 border-b border-slate-100 pb-6 flex justify-between items-end">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              {specialtyFilter ? `${specialtyFilter} Specialists` : "Available Doctors"}
+            </h1>
+            <p className="text-sm text-slate-500 font-medium uppercase tracking-widest mt-1">
+              Verified & Online Now
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+            <span className="text-[10px] font-bold text-slate-700 uppercase">{doctors.length} Online</span>
+          </div>
+        </header>
 
-                <div className="mt-1 text-sm text-gray-600 flex items-center gap-2">
-                  <Phone size={15} className="text-gray-400" />
-                  {doctor.phone}
-                </div>
-
-                <p className="mt-2 text-sm font-medium text-blue-600">
-                  {doctor.specialization}
-                </p>
-              </div>
-
-              
-              <div className="relative flex items-center gap-3">
-               
-                <button
-                  onMouseEnter={() => setHoveredDoctor(doctor)}
-                  onMouseLeave={() => setHoveredDoctor(null)}
-                  className="flex items-center gap-2 px-5 py-2.5 
-                             text-sm font-semibold bg-blue-600 text-white 
-                             rounded-lg border border-blue-700
-                             hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  <User size={16} />
-                  View Profile
-                </button>
-
-               
-                <button
-                onClick={() => navigate("/userpannel/onetoonechat")}
-                  className="flex items-center gap-2 px-4 py-2.5 
-                             text-sm font-semibold bg-green-600 text-white 
-                             rounded-lg border border-green-700
-                             hover:bg-green-700 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  💬 Chat
-                </button>
-
-              
-                {hoveredDoctor?.id === doctor.id && (
-                  <div
-                    className="absolute right-0 top-12 z-[9999] w-72 
-                               bg-white border border-gray-200 
-                               rounded-xl shadow-2xl p-5 animate-in fade-in zoom-in duration-200"
-                  >
-                    <div className="flex items-center gap-4">
-                      <img
-                        src={doctor.photo}
-                        alt={doctor.name}
-                        className="w-14 h-14 rounded-full border border-gray-200 object-cover"
-                      />
-                      <div>
-                        <p className="font-bold text-gray-900">
-                          {doctor.name}
-                        </p>
-                        <p className="text-xs font-medium text-blue-600">
-                          {doctor.specialization}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-700 space-y-2">
-                      <p className="flex justify-between">
-                        <span className="text-gray-500">Hospital:</span>
-                        <span className="font-medium text-right">
-                          {doctor.hospital}
-                        </span>
-                      </p>
-                      <p className="flex justify-between">
-                        <span className="text-gray-500">Experience:</span>
-                        <span className="font-medium">
-                          {doctor.experience}
-                        </span>
-                      </p>
-                      <div className="flex items-center gap-2 pt-1 text-gray-600">
-                        <Phone size={14} className="text-blue-500" />
-                        {doctor.phone}
-                      </div>
+        <div className="space-y-4">
+          {loading ? (
+            <div className="py-20 text-center text-slate-400 font-bold uppercase tracking-tighter animate-pulse">
+              Scanning Medical Directory...
+            </div>
+          ) : doctors.length > 0 ? (
+            doctors.map((doctor) => (
+              <div
+                key={doctor.id}
+                className="group flex items-center justify-between p-6 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-xl hover:border-emerald-200 transition-all duration-300"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="relative">
+                    <img
+                      src={doctor.photo || `https://ui-avatars.com/api/?name=${doctor.name}&background=10b981&color=fff`}
+                      className="w-16 h-16 rounded-2xl object-cover shadow-md group-hover:scale-105 transition-transform"
+                      alt={doctor.name}
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full"></div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Dr. {doctor.name}</h3>
+                    <div className="flex gap-4 mt-1">
+                       <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
+                         <Award size={12} /> {doctor.specialization}
+                       </span>
+                       <span className="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                         <Hospital size={12} /> {doctor.hospital || "Private Practice"}
+                       </span>
                     </div>
                   </div>
-                )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => navigate(`/doctor-profile/${doctor.id}`)}
+                    className="p-3 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                  >
+                    <User size={22} />
+                  </button>
+                  
+                  <button
+                    onClick={() => navigate("/userpannel/onetoonechat", { 
+                        state: { 
+                            doctorId: doctor.id, 
+                            triageId: triageId // PASSING THE TRIAGE ID TO THE CHAT
+                        } 
+                    })}
+                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white text-sm font-black rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all active:scale-95"
+                  >
+                    <MessageCircle size={18} />
+                    CONSULT NOW
+                  </button>
+                </div>
               </div>
+            ))
+          ) : (
+            <div className="py-20 text-center">
+              <p className="text-slate-400 font-medium">No specialists matching this criteria are currently online.</p>
+              <button onClick={() => navigate(-1)} className="mt-4 text-emerald-600 font-bold text-xs uppercase tracking-widest hover:underline">
+                Return to Assessment
+              </button>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

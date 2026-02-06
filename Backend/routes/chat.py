@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask import session as flask_session
 from extension import db
 from model import TriageSession, User
 from .triage import run_triage_logic, gen_soap_note, RECOMMENDATIONS 
@@ -83,42 +84,47 @@ def handle_chat():
     return finalize_session(session, flag, assessment_data)
 
 
-def finalize_session(session, flag, data):
-    print(f"--- ATTEMPTING FINALIZE: SESSION {session.id} ---")
+def finalize_session(triage_record, flag, data):
+    print(f"--- ATTEMPTING FINALIZE: SESSION {triage_record.id} ---")
     
     try:
-
-        session.v1_accident  = int(data.get('V1_ACCIDENT', 0))
-        session.v2_walking   = int(data.get('V2_WALKING', 0))
-        session.v3_lateral   = int(data.get('V3_LATERAL', 0))
-        session.v3_medial    = int(data.get('V3_MEDIAL', 0))
-        session.v4_navicular = int(data.get('V4_NAVICULAR', 0))
-        session.v4_midfoot   = int(data.get('V4_MIDFOOT', 0))
-        session.v5_swelling  = int(data.get('V5_SWELLING', 0)) 
-        session.v6_stability = int(data.get('V6_STABILITY', 0)) 
+        # Map the data to the model
+        triage_record.v1_accident  = int(data.get('V1_ACCIDENT', 0))
+        triage_record.v2_walking   = int(data.get('V2_WALKING', 0))
+        triage_record.v3_lateral   = int(data.get('V3_LATERAL', 0))
+        triage_record.v3_medial    = int(data.get('V3_MEDIAL', 0))
+        triage_record.v4_navicular = int(data.get('V4_NAVICULAR', 0))
+        triage_record.v4_midfoot   = int(data.get('V4_MIDFOOT', 0))
+        triage_record.v5_swelling  = int(data.get('V5_SWELLING', 0)) 
+        triage_record.v6_stability = int(data.get('V6_STABILITY', 0)) 
         
-        session.final_flag   = str(flag)
+        triage_record.final_flag   = str(flag)
         soap = gen_soap_note(data, flag)
-        session.soap_s = str(soap.get('subjective', 'N/A'))
-        session.soap_o = str(soap.get('objective', 'N/A'))
-        session.soap_a = str(soap.get('assessment', 'N/A'))
-        session.soap_p = str(soap.get('plan', 'N/A'))
+        triage_record.soap_s = str(soap.get('subjective', 'N/A'))
+        triage_record.soap_o = str(soap.get('objective', 'N/A'))
+        triage_record.soap_a = str(soap.get('assessment', 'N/A'))
+        triage_record.soap_p = str(soap.get('plan', 'N/A'))
 
-        db.session.add(session)
         db.session.commit()
         
-        print(f"--- SUCCESS: ID {session.id} SAVED WITH ALL PARAMETERS ---")
+        # Save to Flask Session for persistence across requests
+        flask_session['last_triage_id'] = triage_record.id
+        flask_session.modified = True
+
+        # Logic to determine where they go next
+        specialty = "Orthopedics" if flag in ["RED", "YELLOW"] else "General"
+        
+        return jsonify({
+            "status": "complete",
+            "flag": flag,
+            "triage_id": triage_record.id, # MANDATORY for frontend
+            "specialty": specialty,
+            "content": RECOMMENDATIONS.get(flag),
+            "reply": "Assessment complete. Analyzing results...",
+            "redirect": "/userpannel/available-doctors" if flag == "YELLOW" else "/userpannel"
+        })
 
     except Exception as e:
         db.session.rollback()
-        print(f"--- CRITICAL ERROR ON COMMIT: {str(e)} ---")
-        session.final_flag = str(flag)
-        db.session.commit()
-
-    return jsonify({
-        "status": "complete",
-        "flag": flag,
-        "content": RECOMMENDATIONS.get(flag),
-        "reply": "Assessment complete.",
-        "redirect": "/userpannel"
-    })
+        print(f"--- ERROR: {str(e)} ---")
+        return jsonify({"error": "Failed to save triage"}), 500
