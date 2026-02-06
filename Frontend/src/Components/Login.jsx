@@ -34,14 +34,17 @@ export default function Login() {
       const data = await res.json();
 
       if (res.ok) {
+        // LOGIC FIX: Handshake check for first-time login
+        // This matches the key sent by your Python backend
+        if (data.requires_password_update) {
+          toast.info("Security check: Update your temporary password.");
+          navigate("/newpassword", { replace: true });
+          return;
+        }
+
         setUser(data.user);
         setRole(data.role);
         sessionStorage.setItem("user_role", data.role);
-        if (data.first_login) {
-          toast.info("Security check: Update your temporary password.");
-          navigate("/newpassword");
-          return;
-        }
 
         toast.success(`Welcome back, ${data.role}!`);
         const routes = {
@@ -67,7 +70,6 @@ export default function Login() {
       className="min-h-screen flex items-center justify-center bg-gray-100 bg-cover bg-center p-4"
       style={{ backgroundImage: `url('/src/assets/fi.jpg')` }}
     >
-      {/* Overlay for better readability if background is busy */}
       <div className="absolute inset-0 bg-black opacity-20"></div>
 
       <div className="relative bg-white bg-opacity-95 p-8 rounded-3xl shadow-2xl max-w-md w-full space-y-6">
@@ -82,7 +84,6 @@ export default function Login() {
         </div>
 
         <form className="space-y-5" onSubmit={handleLogin}>
-          {/* Email Field */}
           <div>
             <label className="block text-xs font-bold text-gray-700 uppercase mb-1 ml-1">Email Address</label>
             <input
@@ -102,7 +103,6 @@ export default function Login() {
             {emailError && <p className="text-red-500 text-[10px] mt-1 ml-1 font-semibold">{emailError}</p>}
           </div>
 
-          {/* Password Field */}
           <div className="relative">
             <label className="block text-xs font-bold text-gray-700 uppercase mb-1 ml-1">Password</label>
             <input

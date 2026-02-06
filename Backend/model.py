@@ -37,13 +37,13 @@ class Doctor(db.Model):
     bio_summary = db.Column(db.Text, nullable=True) 
     is_available_online = db.Column(db.Boolean, default=False)
     hospital_name = db.Column(db.String(150), nullable=True)
-    # triage_sessions=db.relationship('TriageSession',backref='doctor',lazy=True)
+    triage_sessions=db.relationship('TriageSession',backref='doctor',lazy=True)
 
 class TriageSession(db.Model):
     __tablename__ = 'triage_sessions'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user_profiles.id', ondelete='CASCADE'), nullable=False)
-    # doctor_id=db.Column(db.Integer,db.ForeignKey('doctor_profiles.id',ondelete='CASCADE'),nullable=False)
+    doctor_id=db.Column(db.Integer,db.ForeignKey('doctor_profiles.id',ondelete='CASCADE'),nullable=True)
 
     v0_age = db.Column(db.Float, nullable=True) 
     v1_accident = db.Column(db.Integer, nullable=True) 

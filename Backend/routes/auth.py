@@ -118,12 +118,14 @@ def sign_up():
 @auth.route('/login', methods=['POST'])
 def login():
     data = request.get_json(silent=True)
-    if not data: return jsonify({"error": "Missing body"}), 400
+    if not data: 
+        return jsonify({"error": "Missing body"}), 400
 
     email = data.get('Email')
     password = data.get('Password')
 
     account = Account.query.filter_by(email=email).first()
+
     if not account or account.password != password:
         return jsonify({"error": "Invalid credentials"}), 401
 
@@ -133,31 +135,42 @@ def login():
     session.clear()
     session['account_id'] = account.id 
     session['role'] = account.role
-    session.permanent = True  # This triggers the lifetime set in app.config
+    session['email'] = account.email # <--- NECESSARY: Store email for change_password route
+    session.permanent = True 
     
-    return jsonify({
+    response_data = {
         "message": "Login successful",
         "role": account.role,
-        "user": {"id": account.id}
-    }), 200
+        "user": {"id": account.id},
+        "requires_password_update": account.is_temp_password 
+    }
+
+    return jsonify(response_data), 200
+
 @auth.route("/change_password", methods=["POST"])
 def change_password():
-    
+    # Detect email from either a Password Reset session or a First Login session
     email = session.get("reset_email") or session.get("email")
+    
     if not email:
         return jsonify({"error": "Unauthorized session"}), 401
 
     new_pass = request.json.get("NewPassword")
-    if not new_pass: return jsonify({"error": "New password required"}), 400
+    if not new_pass: 
+        return jsonify({"error": "New password required"}), 400
 
     account = Account.query.filter_by(email=email).first()
+    if not account:
+        return jsonify({"error": "Account not found"}), 404
+
+    # Update security details
     account.password = new_pass
-    account.is_temp_password = False
+    account.is_temp_password = False # <--- Flip the flag
     db.session.commit()
 
+    # Clear session to force a fresh login with the new permanent password
     session.clear()
-    return jsonify({"message": "Password updated successfully"}), 200
-
+    return jsonify({"message": "Password updated successfully. Please login again."}), 200
 @auth.route("/forgot_password", methods=["POST"])
 def forgot_password():
     email = request.json.get("Email")
