@@ -23,7 +23,7 @@ export default function DoctorDashboard() {
   const activeDoctor = doctors[0];
 
   const handleViewSOAP = (noteId) => {
-    navigate(`/soap/${noteId}`);
+    navigate(`/doctordashboard/views/${noteId}`);
   };
 
   const handleVerification = (noteId, decision) => {
@@ -48,7 +48,6 @@ export default function DoctorDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 px-6 pt-20 pb-6">
 
-      {/* ================= HEADER ================= */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-gray-800">
           Welcome, {activeDoctor.name} 👋
@@ -58,14 +57,12 @@ export default function DoctorDashboard() {
         </p>
       </div>
 
-      {/* ================= STATS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <StatCard title="Pending Reviews" value={pending} color="yellow" />
+        <StatCard title="Pending SOAPs" value={pending} color="yellow" />
         <StatCard title="Accepted SOAPs" value={accepted} color="green" />
         <StatCard title="Rejected SOAPs" value={rejected} color="red" />
       </div>
 
-      {/* ================= SOAP TABLE ================= */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
           <ClipboardList className="text-blue-600" />
@@ -139,7 +136,7 @@ export default function DoctorDashboard() {
   );
 }
 
-/* ================= SMALL COMPONENTS ================= */
+
 
 const StatCard = ({ title, value, color }) => {
   const colors = {
