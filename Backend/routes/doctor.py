@@ -1,11 +1,11 @@
 from flask import Blueprint, jsonify, request, session
 from extension import db
-from model import Doctor, Account
+from model import Doctor, Account, TriageSession, Consultation, User
 
 doctor = Blueprint('doctor', __name__)
 
 def get_auth_doctor():
-    # Use the key set during your login process
+    # Primary check: account_id from session
     acc_id = session.get("account_id")
     if not acc_id:
         return None
@@ -15,22 +15,18 @@ def get_auth_doctor():
 def profile():
     doc = get_auth_doctor()
     if not doc:
-        return jsonify({"error": "Session Expired"}), 401
+        return jsonify({"error": "Unauthorized"}), 401
     
     acc = Account.query.get(doc.acc_id)
     return jsonify({
         "full_name": doc.full_name,
-        "phone": doc.phone_number,
+        "available": doc.is_available_online,
         "specialization": doc.area_of_specialization,
-        "license_no": doc.license_no,
-        "bio": doc.bio_summary,
-        "available": doc.is_available_online, # Current DB Status
         "hospital": doc.hospital_name,
-        "dob": str(doc.dob) if doc.dob else None,
-        "license_img": doc.license_img,
         "email": acc.email if acc else ""
     }), 200
 
+# Unified Toggle & Update Route
 @doctor.route('/update', methods=['PUT'])
 def update():
     doc = get_auth_doctor()
@@ -41,42 +37,74 @@ def update():
     if not data:
         return jsonify({"error": "No data provided"}), 400
 
-    # Requirement: is_available triggered by doctor toggle
+    # Handles the availability toggle from the dashboard
     if 'available' in data:
         doc.is_available_online = bool(data['available'])
 
-    # Other Profile Updates
     if 'bio' in data: doc.bio_summary = data['bio']
-    if 'hospital' in data: doc.hospital_name = data['hospital']
     if 'phone' in data: doc.phone_number = data['phone']
 
     try:
         db.session.commit()
-        return jsonify({
-            "message": "Update successful",
-            "available": doc.is_available_online 
-        }), 200
+        return jsonify({"message": "Success", "available": doc.is_available_online}), 200
     except Exception:
         db.session.rollback()
         return jsonify({"error": "Database Error"}), 500
+
+@doctor.route('/consultations', methods=['GET'])
+def get_all_consultations():
+    doc = get_auth_doctor()
+    if not doc:
+        return jsonify({"error": "Unauthorized"}), 401
     
-@doctor.route('/available', methods=['GET'])
-def get_available_doctors():
-    specialty = request.args.get('specialty')
-    
-    # Start with all online doctors
-    query = Doctor.query.filter_by(is_available_online=True)
-    
-    # Apply filter ONLY if specialty is provided
-    if specialty:
-        query = query.filter(Doctor.area_of_specialization.ilike(f"%{specialty}%"))
-        
-    available_docs = query.all()
+    results = db.session.query(
+        Consultation, TriageSession, User
+    ).join(TriageSession, Consultation.triage_id == TriageSession.id
+    ).join(User, Consultation.patient_id == User.id
+    ).filter(Consultation.doctor_id == doc.id).all()
 
     return jsonify([{
-        "id": doc.acc_id,
-        "name": doc.full_name,
-        "specialization": doc.area_of_specialization,
-        "hospital": doc.hospital_name,
-        # "photo": doc.license_img # Or a specific photo field if you have one
-    } for doc in available_docs]), 200
+        "id": c.id,
+        "patient_name": u.full_name,
+        "triage_result": t.final_flag,
+        "status": c.status,
+        "date": c.created_at.strftime("%b %d")
+    } for c, t, u in results]), 200
+
+@doctor.route('/consultation/<int:consult_id>', methods=['GET'])
+def get_consultation(consult_id):
+    doc = get_auth_doctor()
+    if not doc:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    result = db.session.query(
+        Consultation, TriageSession, User
+    ).join(TriageSession, Consultation.triage_id == TriageSession.id
+    ).join(User, Consultation.patient_id == User.id
+    ).filter(Consultation.id == consult_id, Consultation.doctor_id == doc.id).first()
+
+    if not result:
+        return jsonify({"error": "Not found"}), 404
+
+    c, t, u = result
+    return jsonify({
+        "patient_name": u.full_name,
+        "triage_result": t.final_flag,
+        "soap": {"s": t.soap_s, "o": t.soap_o, "a": t.soap_a, "p": t.soap_p}
+    }), 200
+
+@doctor.route('/consultation/<int:consult_id>/respond', methods=['POST'])
+def respond(consult_id):
+    doc = get_auth_doctor()
+    if not doc:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    consult = Consultation.query.filter_by(id=consult_id, doctor_id=doc.id).first()
+    
+    if not consult:
+        return jsonify({"error": "Consultation not found"}), 404
+
+    consult.status = data.get('status')
+    db.session.commit()
+    return jsonify({"message": "Updated", "status": consult.status}), 200

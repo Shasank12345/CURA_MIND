@@ -26,8 +26,8 @@ import UserDashboard from "./Components/Module-2/UserDashboard";
 import Chatbot from "./Components/Module-2/Chatbot";
 import UserProfile from "./Components/Module-2/UserProfile";
 import UserProfileEdit from "./Components/Module-2/ProfileEdit";
-import AvailableDoctorList from "./Components/Module-2/Aviabledoctorlist";
-import WaitingRoom from "./Components/Module-2/Waitingroom";
+import AvailableDoctorList from "./Components/Module-2/Avaibledoctorlist";
+import WaitingRoom from "./Components/Module-2/WaitingRoom";
 
 
 // Doctor (Module 3)
@@ -75,11 +75,12 @@ function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<UserDashboard />} />
           <Route path="chatbot" element={<Chatbot />} />
-            <Route path="Aviabledoctorlist" element={<AvailableDoctorList />} />
+            <Route path="Avaibledoctorlist" element={<AvailableDoctorList />} />
           <Route path="userprofile" element={<UserProfile />} />
           <Route path="profileedit" element={<UserProfileEdit />} />
           <Route path="onetoonechat" element={<Onetoonechat />} />
-          <Route path="waitingroom" element={<WaitingRoom />} />
+          <Route path="waiting-room" element={<WaitingRoom />} />
+          
           
         </Route>
 
@@ -92,6 +93,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
            <Route path="views/:id" element={<Views />} />
         </Route>
+        
       </Routes>
 
       <ToastContainer position="top-right" autoClose={2000} />

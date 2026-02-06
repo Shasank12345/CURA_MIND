@@ -14,7 +14,7 @@ export default function WaitingRoom() {
   useEffect(() => {
     if (!consultationId) {
       toast.error("No active consultation found.");
-      navigate("/userpannel/available-doctors");
+      navigate("/userpannel/Avaibledoctorlist");
       return;
     }
 
@@ -31,7 +31,7 @@ export default function WaitingRoom() {
         } else if (data.status === "rejected") {
           clearInterval(interval);
           toast.error("Doctor is unavailable at the moment.");
-          navigate("/userpannel/available-doctors");
+          navigate("/userpannel/Avaibledoctorlist");
         }
       } catch (err) {
         console.error("Polling error:", err);

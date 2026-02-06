@@ -6,28 +6,44 @@ from extension import db, mail
 from routes import register_routes
 from model import Account
 
-app = Flask(__name__)
-app.config.from_object(Config)
-from flask_cors import CORS
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-db.init_app(app)
-mail.init_app(app)
+    # 1. STRICT CORS CONFIGURATION
+    # Ensure 'origins' matches your React URL exactly. 
+    # Do not mix 'localhost' and '127.0.0.1'.
+    CORS(app, 
+         supports_credentials=True, 
+         origins=["http://localhost:5173"],
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
-app.secret_key = app.config.get('SECRET_KEY', 'dev_key_only_change_in_production')
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SECURE'] = False
-app.config['SESSION_COOKIE_SAMESITE']='lax'
+    # 2. SESSION & COOKIE SECURITY
+    app.secret_key = app.config.get('SECRET_KEY', 'dev_key_only_change_in_production')
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SECURE=False,  # Set to True only if using HTTPS
+        SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_NAME='session_id'
+    )
 
-register_routes(app)
+    # 3. INITIALIZE EXTENSIONS
+    db.init_app(app)
+    mail.init_app(app)
+
+    # 4. REGISTER ROUTES
+    register_routes(app)
+
+    return app
+
+app = create_app()
 
 def initialize_system():
     with app.app_context():
-        
         db.create_all()
         print("Database tables verified/created.")
 
-       
         admin_email = os.getenv("ADMIN_EMAIL", "admin@system.com")
         admin_pass = os.getenv("ADMIN_PASSWORD", "admin123")
         
@@ -51,8 +67,9 @@ def initialize_system():
         else:
             print("Admin account already present.")
 
-
+# Run initialization
 initialize_system()
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # Explicitly binding to localhost
+    app.run(debug=True, host="localhost", port=5000)

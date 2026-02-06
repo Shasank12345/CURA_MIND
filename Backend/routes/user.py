@@ -1,10 +1,8 @@
-
-from flask import Blueprint,jsonify,session,request
-from model import User,Account,TriageSession,Consultation
+from flask import Blueprint, jsonify, session, request
+from model import User, Account, TriageSession, Consultation, Doctor
 from extension import db
 
-user=Blueprint('/user',__name__)
-
+user = Blueprint('user', __name__)
 
 @user.route('/profile', methods=['GET'])
 def get_profile():
@@ -27,9 +25,7 @@ def get_profile():
     }), 200
 
 @user.route('/triage_history', methods=['GET'])
-@user.route('/triage_history', methods=['GET'])
 def get_triage_history():
-    
     account_id = session.get('account_id')
     profile = User.query.filter_by(acc_id=account_id).first()
     
@@ -54,46 +50,43 @@ def get_triage_history():
         }
     } for s in sessions]), 200
 
-
 @user.route('/consultation/request', methods=['POST'])
 def request_consultation():
-    # Use your existing session logic
     acc_id = session.get("account_id")
     if not acc_id:
         return jsonify({"error": "Login required"}), 401
 
     data = request.json
-    doctor_id = data.get('doctor_id')
-    triage_id = data.get('triage_id')
+    try:
+        doc_id = int(data.get('doctor_id'))
+        trig_id = int(data.get('triage_id'))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid ID format"}), 400
 
-    if not doctor_id or not triage_id:
-        return jsonify({"error": "Missing doctor or triage reference"}), 400
+    doctor_exists = Doctor.query.get(doc_id)
+    if not doctor_exists:
+        return jsonify({"error": f"Doctor profile {doc_id} not found"}), 400
 
-    # Retrieve the specific User Profile linked to this Account
     patient_profile = User.query.filter_by(acc_id=acc_id).first()
-    if not patient_profile:
-        return jsonify({"error": "User profile not found"}), 404
-
-    # Create the consultation record
+    
     new_request = Consultation(
-        patient_id=patient_profile.id, # Foreign Key to user_profiles
-        doctor_id=doctor_id,           # Foreign Key to doctor_profiles
-        triage_id=triage_id,           # Foreign Key to triage_sessions
+        patient_id=patient_profile.id,
+        doctor_id=doc_id,
+        triage_id=trig_id,
         status='pending'
     )
 
     try:
         db.session.add(new_request)
         db.session.commit()
+        # FIX: Key renamed to consultation_id to match frontend expectations
         return jsonify({
-            "message": "Request sent successfully",
-            "consultation_id": new_request.id,
-            "status": "pending"
+            "message": "Request sent", 
+            "consultation_id": new_request.id 
         }), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Database error", "details": str(e)}), 500
-    
 
 @user.route('/consultation/status/<int:consult_id>', methods=['GET'])
 def check_consult_status(consult_id):
@@ -101,7 +94,12 @@ def check_consult_status(consult_id):
     if not consult:
         return jsonify({"error": "Not found"}), 404
         
+    doctor_name = None
+    # Ensure the 'doctor' relationship exists in your Consultation model
+    if consult.status == 'accepted' and consult.doctor:
+        doctor_name = consult.doctor.full_name
+        
     return jsonify({
         "status": consult.status,
-        "doctor_name": consult.triage_session.doctor.full_name if consult.status == 'accepted' else None
+        "doctor_name": doctor_name
     }), 200
