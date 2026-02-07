@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
-import { Mail, Phone, Calendar, FileText, Pencil, ToggleLeft, ToggleRight, Loader2, MapPin, ShieldCheck } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  Calendar,
+  FileText,
+  ToggleLeft,
+  ToggleRight,
+  Loader2,
+  MapPin,
+  ShieldCheck
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -83,19 +93,12 @@ export default function Profile() {
               </div>
             </div>
           </div>
-
-          <button 
-            onClick={() => navigate("/doctordashboard/editprofile")}
-            className="absolute top-8 right-8 flex items-center gap-2 bg-white/95 backdrop-blur-md text-green-700 px-6 py-2.5 rounded-xl shadow-lg text-sm font-black hover:bg-white transition-all active:scale-95"
-          >
-            <Pencil size={16} /> EDIT PROFILE
-          </button>
         </div>
 
         {/* Main Grid */}
         <div className="pt-24 p-10 grid grid-cols-1 lg:grid-cols-12 gap-12">
           
-          {/* Left Column: Details */}
+          {/* Left Column */}
           <div className="lg:col-span-8">
             
             {/* Availability Toggle Card */}
@@ -120,7 +123,7 @@ export default function Profile() {
               </button>
             </div>
 
-            {/* Information Tiles */}
+            {/* Info Tiles */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InfoItem icon={<Mail size={20}/>} label="Official Email" value={user?.email} />
               <InfoItem icon={<Phone size={20}/>} label="Phone Number" value={user?.phone} />
@@ -137,7 +140,7 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Right Column: License Display */}
+          {/* Right Column */}
           <div className="lg:col-span-4">
             <div className="sticky top-10">
               <div className="flex items-center justify-between mb-4">

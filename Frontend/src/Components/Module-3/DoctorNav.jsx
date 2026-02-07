@@ -1,53 +1,78 @@
-import { Outlet, useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
+import { LogOut, User, Stethoscope, LayoutDashboard } from "lucide-react";
 
 export default function DoctorLayout() {
+  const location = useLocation();
   const navigate = useNavigate();
 
+  const isChat = location.pathname.includes("onetoonechat");
+
   return (
-   <div className="min-h-screen bg-gray-50 overflow-hidden">
+    <div className="h-screen w-full bg-slate-50">
+    
+      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8">
+        
+      
+        <Link to="/doctordashboard" className="flex items-center gap-2 group">
+          <div className="bg-emerald-600 p-1.5 rounded-lg transition-transform group-hover:scale-105">
+            <Stethoscope size={20} className="text-white" />
+          </div>
+          <h1 className="text-xl font-black text-slate-800 tracking-tight">CuraMind</h1>
+        </Link>
 
-      {/* ================= NAVBAR ================= */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white border-b shadow-sm">
-        <div className="max-w-7xl mx-auto h-full flex items-center justify-between px-6">
+       
+        <div className="flex items-center gap-6">
           
-          {/* LEFT */}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Doctor Dashboard
-            </h1>
-            <p className="text-sm text-gray-500">
-              Welcome, Dr. Sarah Johnson 👋
-            </p>
-          </div>
+          
+          <button
+            onClick={() => navigate("/doctordashboard")}
+            className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors ${
+              location.pathname === "/doctordashboard" ||
+              location.pathname === "/doctordashboard/dashboard"
+                ? "text-emerald-600"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <LayoutDashboard size={16} />
+            Dashboard
+          </button>
 
-          {/* RIGHT */}
-          <div className="flex items-center gap-4">
-            <button
-             onClick={() => navigate("/doctordashboard/onetoonechat")}
-            className="px-5 py-2 rounded-full border border-blue-400 text-blue-600 hover:bg-blue-50 transition">
-              Connect
-            </button>
-  
-            <button  
-            onClick={() => navigate("/doctordashboard/Profile")}
-            className="px-5 py-2 rounded-full border border-blue-400 text-blue-600 hover:bg-blue-50 transition">
-              Profile
-            </button>
-            <button
-              onClick={() => navigate("/")}
-              className="px-5 py-2 rounded-full border border-red-400 text-red-500 hover:bg-red-50 transition flex items-center gap-2"
-            >
-              <LogOut size={16} />
-              Logout
-            </button>
-          </div>
+          
+          <button
+            onClick={() => navigate("/doctordashboard/profile")}
+            className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-colors ${
+              location.pathname.includes("/doctordashboard/profile")
+                ? "text-emerald-600"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <User size={16} />
+            Profile
+          </button>
+
+          {/* Divider */}
+          <div className="h-6 w-[1px] bg-slate-200"></div>
+
+          {/* Logout */}
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
         </div>
       </header>
 
-      {/* ================= PAGE CONTENT ================= */}
-      <main className="pt-16 px-6">
-        <Outlet />
+     
+      <main
+        className={`pt-16 h-full ${
+          isChat ? "overflow-hidden" : "overflow-y-auto"
+        }`}
+      >
+        <div className={isChat ? "h-full" : "max-w-7xl mx-auto"}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

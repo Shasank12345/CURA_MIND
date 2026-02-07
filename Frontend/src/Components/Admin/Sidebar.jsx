@@ -34,11 +34,11 @@ export default function AdminLayout() {
     },
 
     
-    {
-      icon: <MessageSquare className="w-6 h-6" />,
-      label: "Message Triage",
-      path: "message-triage",
-    },
+    // {
+    //   icon: <MessageSquare className="w-6 h-6" />,
+    //   label: "Message Triage",
+    //   path: "message-triage",
+    // },
   ];
 
   return (
