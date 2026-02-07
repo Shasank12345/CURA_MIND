@@ -4,18 +4,26 @@ from extension import db
 
 user = Blueprint('user', __name__)
 
+def get_current_user():
+    """Internal helper to retrieve the User profile via session."""
+    acc_id = session.get('account_id')
+    if not acc_id:
+        return None
+    return User.query.filter_by(acc_id=acc_id).first()
+
 @user.route('/profile', methods=['GET'])
 def get_profile():
-    account_id = session.get('account_id')
-    if not account_id:
+    acc_id = session.get('account_id')
+    if not acc_id:
         return jsonify({"error": "Unauthorized"}), 401
 
-    user_data = db.session.query(User, Account).join(Account, User.acc_id == Account.id).filter(User.acc_id == account_id).first()
+    # Single query join to get both account and profile data
+    data = db.session.query(User, Account).join(Account, User.acc_id == Account.id).filter(User.acc_id == acc_id).first()
 
-    if not user_data:
+    if not data:
         return jsonify({"error": "Profile not found"}), 404
 
-    profile, account = user_data
+    profile, account = data
     return jsonify({
         "full_name": profile.full_name,
         "phone": profile.phone_number,
@@ -24,30 +32,40 @@ def get_profile():
         "role": account.role
     }), 200
 
-@user.route('/triage_history', methods=['GET'])
-def get_triage_history():
-    account_id = session.get('account_id')
-    profile = User.query.filter_by(acc_id=account_id).first()
-    
-    if not profile:
-        return jsonify({"error": "Profile not found"}), 404
+@user.route('/dashboard_unified_history', methods=['GET'])
+def get_unified_history():
+    patient = get_current_user()
+    if not patient:
+        return jsonify({"error": "Unauthorized"}), 401
 
-    sessions = TriageSession.query.filter_by(user_id=profile.id).order_by(TriageSession.created_at.desc()).all()
-    
+    # Optimized join to fetch triage sessions and their associated consultations/doctors
+    results = db.session.query(TriageSession, Consultation, Doctor)\
+        .outerjoin(Consultation, TriageSession.id == Consultation.triage_id)\
+        .outerjoin(Doctor, Consultation.doctor_id == Doctor.id)\
+        .filter(TriageSession.user_id == patient.id)\
+        .order_by(TriageSession.created_at.desc()).all()
+
     return jsonify([{
-        "id": s.id,
-        "date": s.created_at.strftime('%Y-%m-%d %H:%M'),
-        "result": s.final_flag,
-        "soap": {
-            "s": s.soap_s or "N/A",
-            "o": s.soap_o or "N/A",
-            "a": s.soap_a or "N/A",
-            "p": s.soap_p or "N/A"
-        }
-    } for s in sessions]), 200
+        "id": triage.id,
+        "date": triage.created_at.strftime('%d %b %Y | %H:%M'),
+        "result": triage.final_flag,
+        "triage_soap": {
+            "s": triage.soap_s or "N/A", 
+            "o": triage.soap_o or "N/A",
+            "a": triage.soap_a or "N/A", 
+            "p": triage.soap_p or "N/A"
+        },
+        "clinical_summary": consult.clinical_summary if (consult and consult.status == 'completed') else None,
+        "doctor_name": doc.full_name if doc else "N/A",
+        "consult_status": consult.status if consult else "none"
+    } for triage, consult, doc in results]), 200
 
-@user.route('/consultation/request', methods=['POST'])
+@user.route('/consultation/request', methods=['POST', 'OPTIONS'])
 def request_consultation():
+    # CORS Preflight handling
+    if request.method == "OPTIONS":
+        return "", 200
+
     acc_id = session.get("account_id")
     if not acc_id:
         return jsonify({"error": "Login required"}), 401
@@ -59,12 +77,17 @@ def request_consultation():
     except (TypeError, ValueError):
         return jsonify({"error": "Invalid ID format"}), 400
 
-    patient_profile = User.query.filter_by(acc_id=acc_id).first()
-    if not patient_profile:
+    patient = get_current_user()
+    if not patient:
         return jsonify({"error": "User profile not found"}), 404
 
+    # Prevent duplicate pending requests for the same triage session
+    existing = Consultation.query.filter_by(triage_id=trig_id, status='pending').first()
+    if existing:
+        return jsonify({"error": "Request already pending for this session"}), 409
+
     new_request = Consultation(
-        patient_id=patient_profile.id,
+        patient_id=patient.id,
         doctor_id=doc_id,
         triage_id=trig_id,
         status='pending'
@@ -73,30 +96,18 @@ def request_consultation():
     try:
         db.session.add(new_request)
         db.session.commit()
-        return jsonify({
-            "message": "Request sent", 
-            "consultation_id": new_request.id 
-        }), 201
-    except Exception as e:
+        return jsonify({"message": "Request sent", "consultation_id": new_request.id}), 201
+    except Exception:
         db.session.rollback()
         return jsonify({"error": "Database error"}), 500
 
 @user.route('/consultation/status/<int:consult_id>', methods=['GET'])
 def get_consult_status(consult_id):
-    # 1. Check session
-    acc_id = session.get("account_id")
-    if not acc_id:
-        print("DEBUG: No account_id in session")
+    patient = get_current_user()
+    if not patient:
         return jsonify({"error": "Unauthorized"}), 401
 
-    # 2. Get patient profile
-    patient = User.query.filter_by(acc_id=acc_id).first()
-    if not patient:
-        return jsonify({"error": "User profile not found"}), 404
-
-    # 3. Find consultation specifically for this patient
     consult = Consultation.query.filter_by(id=consult_id, patient_id=patient.id).first()
-    
     if not consult:
         return jsonify({"error": "Consultation not found"}), 404
         

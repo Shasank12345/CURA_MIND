@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, session
 from extension import db
 import os
+import datetime
 from model import Doctor, Account, TriageSession, Consultation, User
 
 doctor = Blueprint('doctor', __name__)
@@ -200,3 +201,21 @@ def end_consultation(consult_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": "Failed to finalize session"}), 500
+    
+
+@doctor.route('/consultation/<int:consult_id>/finalize', methods=['POST'])
+def finalize_consultation(consult_id):
+    doc = get_auth_doctor()
+    data = request.json
+    
+    consult = Consultation.query.filter_by(id=consult_id, doctor_id=doc.id).first()
+    if not consult:
+        return jsonify({"error": "Record not found"}), 404
+
+    # Only update the summary - leave the Triage SOAP alone as requested
+    consult.clinical_summary = data.get('summary')
+    consult.status = 'completed'
+    consult.ended_at = datetime.datetime.utcnow()
+    
+    db.session.commit()
+    return jsonify({"message": "Summary saved successfully"}), 200

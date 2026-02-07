@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, CheckCircle, XCircle, ClipboardList, Loader2, Activity, MessageSquare } from "lucide-react";
+import { CheckCircle, XCircle, ClipboardList, Loader2, Activity, MessageSquare, Eye } from "lucide-react";
 import { toast } from "react-toastify";
 
 const API_BASE = "http://localhost:5000";
@@ -28,12 +28,12 @@ export default function DoctorDashboard() {
         });
         if (profileRes.ok) {
           const profileData = await profileRes.json();
-          // Match your DB column name: is_available_online
-          setIsAvailable(profileData.available || profileData.is_available_online); 
+          // Ensure this matches your specific DB column
+          setIsAvailable(profileData.is_available_online || profileData.available); 
         }
       }
     } catch (err) {
-      console.error("Sync error:", err);
+      console.error("Critical Sync Failure:", err);
     } finally {
       if (isInitial) setLoading(false);
     }
@@ -57,7 +57,7 @@ export default function DoctorDashboard() {
       const res = await fetch(`${API_BASE}/doctor/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ available: newStatus }),
+        body: JSON.stringify({ available: newStatus }), // Check if your backend expects 'available' or 'is_available_online'
         credentials: "include"
       });
 
@@ -66,17 +66,16 @@ export default function DoctorDashboard() {
         toast.success(`SYSTEM: ${newStatus ? 'ONLINE' : 'OFFLINE'}`);
       }
     } catch (err) {
-      toast.error("Network error updating status.");
+      toast.error("DB Update Failure");
     }
   };
 
   const handleAction = async (id, action) => {
     try {
-      // ALIGNED WITH OTOCHAT BACKEND LOGIC
       const res = await fetch(`${API_BASE}/otochat/respond/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }), // 'accepted' or 'rejected'
+        body: JSON.stringify({ action }),
         credentials: "include"
       });
 
@@ -85,111 +84,122 @@ export default function DoctorDashboard() {
         setConsultations(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
         toast.success(`SESSION ${id}: ${action.toUpperCase()}`);
         
-        // Auto-navigate if accepted
         if (action === 'accepted') {
           navigate("/doctordashboard/onetoonechat", { state: { consultationId: id } });
         }
       }
     } catch (err) {
-      toast.error("Action failed.");
+      toast.error("Protocol Execution Failure");
     }
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-emerald-600 bg-slate-50">
-      <Loader2 className="animate-spin mb-2" size={48} />
-      <span className="font-black text-[10px] tracking-[0.3em] uppercase">Synchronizing Neural Link...</span>
+    <div className="flex flex-col items-center justify-center min-h-screen text-emerald-600 bg-slate-50 font-mono">
+      <Loader2 className="animate-spin mb-4" size={48} />
+      <span className="font-black text-[10px] tracking-[0.4em] uppercase text-emerald-800">Neural Sync in Progress...</span>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 px-6 pt-24 pb-6 font-sans">
+    <div className="min-h-screen bg-slate-50 px-8 pt-24 pb-12 font-sans">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-end mb-10">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Clinical Command</h1>
-            <p className="text-slate-500 text-xs font-bold tracking-widest uppercase mt-1 flex items-center gap-2">
-              <span className={`inline-block w-2 h-2 rounded-full ${isAvailable ? 'bg-emerald-500 animate-ping' : 'bg-slate-300'}`}></span>
-              Live Session Monitoring
-            </p>
+            <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter leading-none">Clinical Command</h1>
+            <div className="mt-3 flex items-center gap-3">
+              <span className={`h-2 w-2 rounded-full ${isAvailable ? 'bg-emerald-500 animate-ping' : 'bg-slate-300'}`}></span>
+              <p className="text-slate-500 text-[10px] font-black tracking-[0.2em] uppercase">Real-Time Queue Monitoring</p>
+            </div>
           </div>
           
           <button 
             onClick={toggleAvailability}
-            className={`flex items-center gap-3 px-8 py-3 rounded-none font-black text-[11px] tracking-[0.2em] transition-all border-2 ${
+            className={`px-10 py-4 font-black text-[11px] tracking-[0.2em] transition-all border-2 ${
               isAvailable 
-              ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-200" 
+              ? "bg-emerald-600 border-emerald-600 text-white shadow-xl shadow-emerald-100" 
               : "bg-white border-slate-300 text-slate-400"
             }`}
           >
-            <Activity size={16} className={isAvailable ? "animate-pulse" : ""} />
-            {isAvailable ? "STATUS: ACTIVE" : "STATUS: INACTIVE"}
+            {isAvailable ? "PROTOCOL: ACTIVE" : "PROTOCOL: STANDBY"}
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           <StatCard title="Awaiting Triage" value={stats.pending} color="yellow" />
-          <StatCard title="Active Sessions" value={stats.accepted} color="green" />
-          <StatCard title="Completed" value={stats.completed} color="slate" />
+          <StatCard title="Active In-Session" value={stats.accepted} color="green" />
+          <StatCard title="Archive/Closed" value={stats.completed} color="slate" />
         </div>
 
-        <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
+        {/* Queue Table */}
+        <div className="bg-white border border-slate-200 shadow-sm">
           <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <div className="flex items-center gap-3">
-              <ClipboardList className="text-slate-800" size={18} />
-              <h3 className="text-xs font-black text-slate-800 uppercase tracking-[0.15em]">Patient Queue</h3>
+            <div className="flex items-center gap-3 text-slate-800">
+              <ClipboardList size={18} />
+              <h3 className="text-[11px] font-black uppercase tracking-[0.2em]">Patient Assessment Queue</h3>
             </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Auto-refreshing 5s</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Refresh Interval: 5.0s</span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/30">
-                  <th className="p-5">ID</th>
-                  <th className="p-5">Patient Name</th>
-                  <th className="p-5">Triage</th>
-                  <th className="p-5 text-right">Operational Control</th>
+                  <th className="p-6">Index</th>
+                  <th className="p-6">Patient Identifier</th>
+                  <th className="p-6">Severity</th>
+                  <th className="p-6 text-right">Operational Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {consultations.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="p-16 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Queue Empty.</td>
+                    <td colSpan="4" className="p-20 text-center text-slate-300 text-[10px] font-black uppercase tracking-[0.3em]">No active subjects in queue.</td>
                   </tr>
                 ) : (
                   consultations.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/80 transition-all group">
-                      <td className="p-5 font-mono text-xs font-bold text-slate-400">#{c.id}</td>
-                      <td className="p-5">
+                    <tr key={c.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="p-6 font-mono text-xs font-bold text-slate-400">#{c.id}</td>
+                      <td className="p-6">
                         <span className="block font-black text-slate-800 text-sm uppercase tracking-tight">{c.patient_name}</span>
-                        <span className="text-[9px] text-slate-400 font-bold uppercase">Status: {c.status}</span>
+                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Status: {c.status}</span>
                       </td>
-                      <td className="p-5">
-                        <span className={`px-3 py-1 text-[9px] font-black tracking-widest uppercase border ${
-                          c.triage_result === 'RED' ? 'border-red-500 text-red-600 bg-red-50' : 'border-emerald-500 text-emerald-600 bg-emerald-50'
+                      <td className="p-6">
+                        <span className={`px-4 py-1 text-[9px] font-black tracking-widest uppercase border-2 ${
+                          c.triage_result === 'RED' ? 'border-red-500 text-red-600 bg-red-50 animate-pulse' : 'border-emerald-500 text-emerald-600 bg-emerald-50'
                         }`}>
                           {c.triage_result || 'NORMAL'}
                         </span>
                       </td>
-                      <td className="p-5">
+                      <td className="p-6">
                         <div className="flex justify-end gap-3">
+                          {/* Always allow viewing the SOAP record if it exists */}
+                          <button 
+                            onClick={() => navigate(`/doctordashboard/view/${c.id}`)}
+                            className="p-2 text-slate-400 hover:text-emerald-600 transition-colors"
+                            title="View Records"
+                          >
+                            <Eye size={18} />
+                          </button>
+
                           {c.status === 'pending' && (
                             <>
-                              <button onClick={() => handleAction(c.id, 'accepted')} className="flex items-center gap-2 px-3 py-2 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase hover:bg-emerald-600 hover:text-white transition-all">
-                                <CheckCircle size={14}/> Accept
+                              <button onClick={() => handleAction(c.id, 'accepted')} className="px-4 py-2 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase hover:bg-emerald-600 hover:text-white transition-all">
+                                Accept
                               </button>
-                              <button onClick={() => handleAction(c.id, 'rejected')} className="flex items-center gap-2 px-3 py-2 bg-red-100 text-red-700 text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all">
-                                <XCircle size={14}/> Deny
+                              <button onClick={() => handleAction(c.id, 'rejected')} className="px-4 py-2 bg-red-100 text-red-700 text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all">
+                                Deny
                               </button>
                             </>
                           )}
+                          
                           {c.status === 'accepted' && (
                             <button 
                               onClick={() => navigate("/doctordashboard/onetoonechat", { state: { consultationId: c.id } })}
-                              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase shadow-lg hover:scale-105 transition-all"
+                              className="flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase hover:shadow-lg hover:shadow-emerald-100 transition-all"
                             >
-                              <MessageSquare size={14} /> Resume Chat
+                              <MessageSquare size={14} /> Resume Session
                             </button>
                           )}
                         </div>
@@ -209,14 +219,13 @@ export default function DoctorDashboard() {
 const StatCard = ({ title, value, color }) => {
   const colors = {
     green: "border-b-emerald-500",
-    red: "border-b-red-500",
     yellow: "border-b-yellow-500",
     slate: "border-b-slate-400"
   };
   return (
-    <div className={`p-8 bg-white border border-slate-200 shadow-sm border-b-4 ${colors[color]}`}>
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2">{title}</p>
-      <h2 className="text-5xl font-black text-slate-900 tracking-tighter">{String(value).padStart(2, '0')}</h2>
+    <div className={`p-10 bg-white border border-slate-200 shadow-sm border-b-8 ${colors[color]}`}>
+      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-4">{title}</p>
+      <h2 className="text-6xl font-black text-slate-900 tracking-tighter italic">{String(value).padStart(2, '0')}</h2>
     </div>
   );
 };

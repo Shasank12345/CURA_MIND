@@ -93,7 +93,7 @@ function App() {
           <Route path="onetoonechat" element={<Onetoonechat />} />
           <Route path="editprofile" element={<DoctorProfileEdit />} />
           <Route path="profile" element={<Profile />} />
-           <Route path="views/:id" element={<Views />} />
+           <Route path="view/:id" element={<Views />} />
         </Route>
         
       </Routes>
