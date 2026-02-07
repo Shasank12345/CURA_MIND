@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shield, Activity, MessageSquare, Download, FileText, AlertCircle, CheckCircle, LogOut } from "lucide-react";
+import { Shield, Activity, Download, FileText, AlertCircle, CheckCircle, ChevronRight } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -26,7 +26,7 @@ const downloadTriageReport = (s) => {
       ['Plan', s.triage_soap.p],
     ],
     theme: 'grid',
-    headStyles: { fillColor: [16, 185, 129] }, // Green Theme
+    headStyles: { fillColor: [16, 185, 129] },
   });
   doc.save(`Triage_${s.id}.pdf`);
 };
@@ -35,22 +35,17 @@ const downloadDoctorSummary = (s) => {
   const doc = new jsPDF();
   doc.setFontSize(18);
   doc.text("OFFICIAL CLINICAL SUMMARY", 15, 20);
-  
   doc.setFontSize(10);
   doc.text(`Attending Physician: Dr. ${s.doctor_name}`, 15, 35);
   doc.text(`Consultation Date: ${s.date}`, 15, 40);
-  
   doc.line(15, 45, 195, 45);
-  
   doc.setFontSize(12);
   doc.text("Clinical Notes:", 15, 55);
   const splitText = doc.splitTextToSize(s.clinical_summary, 180);
   doc.text(splitText, 15, 65);
-  
   doc.save(`Summary_${s.id}.pdf`);
 };
 
-// --- MAIN COMPONENT ---
 export default function UserDashboard() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,68 +69,104 @@ export default function UserDashboard() {
     fetchData();
   }, [navigate]);
 
-  if (loading) return <div className="h-screen flex items-center justify-center font-black text-emerald-600">LOADING SECURE LEDGER...</div>;
+  if (loading) return (
+    <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
+      <Activity className="text-emerald-500 animate-pulse mb-4" size={48} />
+      <span className="font-bold text-slate-400 tracking-tighter uppercase">Initializing Ledger</span>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-12">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
         
-        {/* LEFT COLUMN: ACTIONS */}
-        <div className="lg:col-span-4 space-y-4">
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
-            <Shield className="text-emerald-600 mb-4" size={42} />
-            <h1 className="text-3xl font-black text-slate-900 leading-tight">PATIENT<br/>DASHBOARD</h1>
-            <div className="mt-8 space-y-3">
-              <Link to="/userpannel/chatbot" className="flex items-center justify-between bg-emerald-600 text-white p-5 rounded-2xl font-black hover:bg-emerald-700 transition">
-                <span>NEW TRIAGE</span>
-                <Activity size={20} />
-              </Link>
-              <Link to="/userpannel/Avaibledoctorlist" className="flex items-center justify-between bg-slate-900 text-white p-5 rounded-2xl font-black hover:bg-black transition">
-                <span>CONSULT DOCTOR</span>
-                <MessageSquare size={20} />
-              </Link>
+        {/* SIDEBAR NAVIGATION */}
+        <div className="lg:col-span-3">
+          <div className="sticky top-12 space-y-8">
+            <div>
+              <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-emerald-200">
+                <Shield className="text-white" size={24} />
+              </div>
+              <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">
+                Patient<br/><span className="text-emerald-600">Portal.</span>
+              </h1>
             </div>
+
+            <Link 
+              to="/userpannel/chatbot" 
+              className="group flex items-center justify-between bg-slate-900 text-white p-5 rounded-2xl font-bold hover:bg-emerald-600 transition-all duration-300 shadow-xl shadow-slate-200"
+            >
+              <div className="flex flex-col">
+                <span className="text-[10px] opacity-60 uppercase tracking-widest">Action</span>
+                <span>Start New Triage</span>
+              </div>
+              <Activity className="group-hover:rotate-12 transition-transform" size={20} />
+            </Link>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: HISTORY */}
-        <div className="lg:col-span-8">
-          <div className="flex items-center justify-between mb-6 px-4">
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">Medical History</h2>
-            <span className="text-[10px] bg-slate-200 px-3 py-1 rounded-full font-bold">{history.length} SESSIONS</span>
+        {/* MAIN CONTENT AREA */}
+        <div className="lg:col-span-9">
+          <div className="flex items-end justify-between mb-8 border-b border-slate-200 pb-6">
+            <div>
+              <h2 className="text-sm font-bold text-slate-400 uppercase tracking-[0.2em]">Activity History</h2>
+              <p className="text-slate-900 font-medium">Review your clinical assessments</p>
+            </div>
+            <div className="bg-emerald-50 text-emerald-700 px-4 py-1 rounded-full text-xs font-bold border border-emerald-100">
+              {history.length} Sessions Total
+            </div>
           </div>
 
           <div className="space-y-4">
-            {history.map((s) => (
-              <div key={s.id} className="bg-white p-6 rounded-[2rem] border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:border-emerald-200 transition-colors">
-                <div className="flex items-center gap-5">
-                  <div className={`p-4 rounded-2xl ${s.result === 'RED' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                    {s.result === 'RED' ? <AlertCircle size={28} /> : <CheckCircle size={28} />}
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase">{s.date}</p>
-                    <h3 className={`text-lg font-black ${s.result === 'RED' ? 'text-red-600' : 'text-slate-800'}`}>{s.result} FLAG ASSESSMENT</h3>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => downloadTriageReport(s)}
-                    className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-100 text-slate-600 px-5 py-3 rounded-xl text-[10px] font-black hover:bg-slate-200 transition"
-                  >
-                    <FileText size={16} /> TRIAGE DATA
-                  </button>
-                  {s.clinical_summary && (
-                    <button 
-                      onClick={() => downloadDoctorSummary(s)}
-                      className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-xl text-[10px] font-black hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition"
-                    >
-                      <Download size={16} /> SUMMARY
-                    </button>
-                  )}
-                </div>
+            {history.length === 0 ? (
+              <div className="bg-white border-2 border-dashed border-slate-200 rounded-[2rem] p-20 text-center">
+                <p className="text-slate-400 font-medium">No medical history found.</p>
               </div>
-            ))}
+            ) : (
+              history.map((s) => (
+                <div 
+                  key={s.id} 
+                  className="group bg-white p-5 rounded-[1.5rem] border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center gap-6">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                      s.result === 'RED' ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-500'
+                    }`}>
+                      {s.result === 'RED' ? <AlertCircle size={24} /> : <CheckCircle size={24} />}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                          s.result === 'RED' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
+                        }`}>
+                          {s.result} FLAG
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{s.date}</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-800 tracking-tight">System Assessment Report</h3>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => downloadTriageReport(s)}
+                      className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-50 text-slate-600 px-4 py-3 rounded-xl text-[11px] font-bold hover:bg-slate-100 transition border border-slate-200"
+                    >
+                      <FileText size={14} /> DATA
+                    </button>
+                    {s.clinical_summary && (
+                      <button 
+                        onClick={() => downloadDoctorSummary(s)}
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-emerald-600 text-white px-5 py-3 rounded-xl text-[11px] font-bold hover:bg-emerald-700 hover:-translate-y-0.5 transition-all shadow-sm"
+                      >
+                        <Download size={14} /> SUMMARY
+                      </button>
+                    )}
+                    <ChevronRight className="hidden md:block text-slate-300 group-hover:translate-x-1 transition-transform" size={20} />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
