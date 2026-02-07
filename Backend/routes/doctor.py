@@ -172,3 +172,31 @@ def respond(consult_id):
     except Exception:
         db.session.rollback()
         return jsonify({"error": "Update failed"}), 500
+    
+@doctor.route('/consultation/<int:consult_id>/end', methods=['POST'])
+def end_consultation(consult_id):
+    doc = get_auth_doctor()
+    if not doc:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    summary = data.get('summary')
+    
+    # Mentor Directive: Enforcement of clinical standards
+    if not summary or len(summary) < 15:
+        return jsonify({"error": "Clinical summary must be at least 15 characters long."}), 400
+        
+    consult = Consultation.query.filter_by(id=consult_id, doctor_id=doc.id).first()
+    if not consult:
+        return jsonify({"error": "Consultation record not found"}), 404
+
+    try:
+        # Update session status and persist the clinical record
+        consult.status = 'completed'
+        consult.clinical_summary = summary
+        # Assuming your model has an ended_at column, or just use DB transaction time
+        db.session.commit()
+        return jsonify({"message": "Consultation finalized and archived"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Failed to finalize session"}), 500

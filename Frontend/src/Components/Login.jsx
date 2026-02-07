@@ -34,24 +34,36 @@ export default function Login() {
       const data = await res.json();
 
       if (res.ok) {
-        // LOGIC FIX: Handshake check for first-time login
-        // This matches the key sent by your Python backend
+        // First-time login check
         if (data.requires_password_update) {
           toast.info("Security check: Update your temporary password.");
           navigate("/newpassword", { replace: true });
           return;
         }
 
+        // --- PERSISTENCE LOGIC START ---
+        // This solves the SESSION ERROR in OneToOneChat.jsx 
+        // by mirroring the backend structure into localStorage
+        const authData = {
+          user: data.user, // Contains { id: ... }
+          role: data.role
+        };
+        localStorage.setItem("user", JSON.stringify(authData));
+        // --- PERSISTENCE LOGIC END ---
+
+        // Updating Context State
         setUser(data.user);
         setRole(data.role);
         sessionStorage.setItem("user_role", data.role);
 
         toast.success(`Welcome back, ${data.role}!`);
+        
         const routes = {
           "Admin": "/adminpannel",
           "Doctor": "/doctordashboard",
           "User": "/userpannel"
         };
+        
         navigate(routes[data.role] || "/userpannel");
 
       } else {
@@ -75,7 +87,7 @@ export default function Login() {
       <div className="relative bg-white bg-opacity-95 p-8 rounded-3xl shadow-2xl max-w-md w-full space-y-6">
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center gap-2 text-3xl font-bold text-gray-800">
-            <span className="text-green-500"><Activity size={32} /></span>
+            <span className="text-emerald-500"><Activity size={32} /></span>
             <span className="tracking-tight">CuraMind</span>
           </div>
           <p className="text-gray-500 text-center font-medium text-sm">
@@ -85,7 +97,9 @@ export default function Login() {
 
         <form className="space-y-5" onSubmit={handleLogin}>
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase mb-1 ml-1">Email Address</label>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-1 ml-1 tracking-wider">
+              Email Address
+            </label>
             <input
               type="email"
               placeholder="name@example.com"
@@ -96,26 +110,32 @@ export default function Login() {
                 const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 setEmailError(!regex.test(val) ? "Invalid email format" : "");
               }}
-              className={`w-full p-3 border rounded-xl text-sm transition focus:ring-2 focus:ring-indigo-400 outline-none ${
+              className={`w-full p-3 border rounded-xl text-sm transition focus:ring-2 focus:ring-emerald-400 outline-none font-semibold ${
                 emailError ? "border-red-500" : "border-gray-200"
               }`}
             />
-            {emailError && <p className="text-red-500 text-[10px] mt-1 ml-1 font-semibold">{emailError}</p>}
+            {emailError && (
+              <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold uppercase tracking-tighter">
+                {emailError}
+              </p>
+            )}
           </div>
 
           <div className="relative">
-            <label className="block text-xs font-bold text-gray-700 uppercase mb-1 ml-1">Password</label>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-1 ml-1 tracking-wider">
+              Password
+            </label>
             <input
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border border-gray-200 rounded-xl text-sm transition focus:ring-2 focus:ring-indigo-400 outline-none"
+              className="w-full p-3 border border-gray-200 rounded-xl text-sm transition focus:ring-2 focus:ring-emerald-400 outline-none font-semibold"
             />
             <button
               type="button"
               onClick={togglePassword}
-              className="absolute right-3 top-8 text-gray-400 hover:text-indigo-600 transition"
+              className="absolute right-3 top-8 text-gray-400 hover:text-emerald-600 transition"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -125,7 +145,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => navigate("/ForgotPassword")}
-              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition"
+              className="text-xs font-black text-emerald-600 hover:text-emerald-800 transition uppercase tracking-tighter"
             >
               Forgot Password?
             </button>
@@ -134,27 +154,27 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-indigo-700 active:scale-95 transition disabled:bg-gray-400"
+            className="w-full py-3 bg-emerald-600 text-white rounded-xl font-black text-sm shadow-lg hover:bg-emerald-700 active:scale-95 transition disabled:bg-gray-400 uppercase tracking-widest"
           >
             {loading ? "AUTHENTICATING..." : "SIGN IN"}
           </button>
         </form>
 
         <div className="pt-4 border-t border-gray-100">
-          <p className="text-center text-gray-500 text-xs font-bold uppercase tracking-wider">
+          <p className="text-center text-gray-500 text-[10px] font-black uppercase tracking-widest mb-4">
             New to CuraMind?
           </p>
           
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => navigate("/UserSignup")}
-              className="flex items-center justify-center gap-2 p-2 border border-gray-200 rounded-lg text-xs font-bold hover:bg-gray-50 transition"
+              className="flex items-center justify-center gap-2 p-3 border-2 border-emerald-50 border-gray-100 rounded-xl text-xs font-black hover:bg-emerald-50 hover:border-emerald-200 transition text-slate-700"
             >
               <UserIcon size={14} /> PATIENT
             </button>
             <button
               onClick={() => navigate("/DoctorSignup")}
-              className="flex items-center justify-center gap-2 p-2 border border-gray-200 rounded-lg text-xs font-bold hover:bg-gray-50 transition"
+              className="flex items-center justify-center gap-2 p-3 border-2 border-emerald-50 border-gray-100 rounded-xl text-xs font-black hover:bg-emerald-50 hover:border-emerald-200 transition text-slate-700"
             >
               👨‍⚕️ DOCTOR
             </button>

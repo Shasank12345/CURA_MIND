@@ -111,19 +111,20 @@ def login():
     if not account.is_verified:
         return jsonify({"error": "Account pending verification"}), 403
 
-    # CRITICAL: If you use the same browser for two roles, 
-    # this clear() will ALWAYS log out the other tab. 
     session.clear() 
     session['account_id'] = account.id 
-    session.permanent = True 
-
     session['role'] = account.role
     session['email'] = account.email 
+    session.permanent = True 
     
+    # THE CRITICAL FIX: Nest id and role inside the user object
     return jsonify({
         "message": "Login successful",
         "role": account.role,
-        "user": {"id": account.id},
+        "user": {
+            "id": account.id,
+            "role": account.role
+        },
         "requires_password_update": account.is_temp_password 
     }), 200
 
@@ -145,6 +146,8 @@ def change_password():
     account.is_temp_password = False 
     db.session.commit()
     session['account_id'] = account.id
+    session['role'] = account.role  # ADD THIS LINE
+    session['email'] = account.email # ADD THIS LINE
     session.permanent = True
 
     # DO NOT use session.clear() here. It kills the session you just built.

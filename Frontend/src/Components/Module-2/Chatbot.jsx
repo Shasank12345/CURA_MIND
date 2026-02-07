@@ -27,10 +27,11 @@ export default function Chatbot() {
 
   const activeChat = chats.find((c) => c.id === activeChatId);
 
+  // CRITICAL FIX: Ensure the backend handles "START_TRIAGE" or an empty string as a trigger
   useEffect(() => {
     if (!hasInitialized.current && user?.id) {
       hasInitialized.current = true;
-      handleSendMessage(""); 
+      handleSendMessage("START_TRIAGE"); 
     }
   }, [user?.id]);
 
@@ -42,10 +43,14 @@ export default function Chatbot() {
     if (loading) return; 
 
     const messageText = textOverride !== null ? textOverride : input;
+    
+    // Don't send empty inputs unless it's the very first initialization
     if (messageText === "" && activeChat?.messages.length > 0) return;
     
     setLoading(true);
-    if (messageText !== "") {
+    
+    // Only display the message in UI if it's NOT the hidden start trigger
+    if (messageText !== "" && messageText !== "START_TRIAGE") {
       updateActiveChat({ sender: "user", text: messageText });
     }
 
@@ -60,12 +65,14 @@ export default function Chatbot() {
       });
 
       const data = await response.json();
+      console.log("DEBUG BACKEND RESPONSE:", data); // STOP AND LOOK AT THIS IN CONSOLE
+
       if (!response.ok) throw new Error(data.error || "Server error");
 
       setCurrentMeta(data);
 
+      // Check if triage is actually finished
       if (data.status === "complete") {
-        // SAVING TRIAGE ID
         if (data.triage_id) {
             sessionStorage.setItem("active_triage_id", data.triage_id);
         }
@@ -80,19 +87,19 @@ export default function Chatbot() {
         } 
         else {
           const specialty = data.flag === "YELLOW" ? "Orthopedics" : "General";
-          toast.info(`Assessment Complete. Redirecting...`);
+          toast.info(`Assessment Complete. Flag: ${data.flag}`);
           
-          // CRITICAL: Matches path in your App.js exactly
           setTimeout(() => {
             navigate(`/userpannel/Avaibledoctorlist?specialty=${specialty}&triage_id=${data.triage_id}`);
           }, 1500);
         }
       } else {
+        // Continue Chatting
         updateActiveChat({ sender: "bot", text: data.reply });
       }
 
     } catch (err) {
-      updateActiveChat({ sender: "bot", text: "Connection error." });
+      updateActiveChat({ sender: "bot", text: "Connection error. Ensure backend is running." });
       toast.error("Network failure.");
     } finally {
       setLoading(false);
@@ -117,7 +124,7 @@ export default function Chatbot() {
             </div>
             <h2 className="text-xl font-bold text-slate-900 mb-2 uppercase">Emergency Protocol</h2>
             <p className="text-slate-600 mb-6 text-sm">
-              {emergencyData?.text || "High-risk factors detected."}
+              {emergencyData?.text || "High-risk factors detected. Seek immediate care."}
             </p>
 
             <div className="space-y-3">
@@ -130,8 +137,8 @@ export default function Chatbot() {
                 </a>
               ))}
             </div>
-            <button onClick={() => navigate("/userpannel")} className="mt-6 text-slate-400 font-bold text-xs uppercase">
-              Exit
+            <button onClick={() => setShowEmergency(false)} className="mt-6 text-slate-400 font-bold text-xs uppercase underline">
+              Back to Assessment
             </button>
           </div>
         </div>
@@ -158,6 +165,14 @@ export default function Chatbot() {
               </div>
             ))}
             
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-slate-100 p-4 rounded-2xl animate-pulse text-slate-400 text-xs font-bold uppercase">
+                  Analyzing symptoms...
+                </div>
+              </div>
+            )}
+
             {currentMeta && activeChat?.status === "active" && !loading && (
               <div className="max-w-sm bg-white border border-emerald-100 rounded-2xl p-5 shadow-xl space-y-4 animate-in slide-in-from-bottom-2">
                 <div className="flex items-center gap-2 text-emerald-700 font-bold text-[10px] uppercase">
@@ -165,8 +180,8 @@ export default function Chatbot() {
                 </div>
                 {currentMeta.helper && <p className="text-slate-500 text-xs italic">{currentMeta.helper}</p>}
                 <div className="flex gap-2">
-                  <button onClick={() => handleSendMessage("Yes")} className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700">YES</button>
-                  <button onClick={() => handleSendMessage("No")} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200">NO</button>
+                  <button onClick={() => handleSendMessage("Yes")} className="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 transition-transform active:scale-95">YES</button>
+                  <button onClick={() => handleSendMessage("No")} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition-transform active:scale-95">NO</button>
                 </div>
               </div>
             )}
@@ -176,8 +191,14 @@ export default function Chatbot() {
 
         <footer className="p-6 border-t">
           <div className="max-w-2xl mx-auto flex gap-3">
-            <input disabled className="flex-1 p-4 rounded-xl border bg-slate-50 text-sm italic" placeholder="Use buttons to respond..." />
-            <button disabled className="p-4 bg-slate-200 text-white rounded-xl"><Send size={20} /></button>
+            <input 
+              readOnly 
+              className="flex-1 p-4 rounded-xl border bg-slate-50 text-sm italic cursor-not-allowed" 
+              placeholder="Use buttons above to answer..." 
+            />
+            <button disabled className="p-4 bg-slate-200 text-white rounded-xl">
+              <Send size={20} />
+            </button>
           </div>
         </footer>
       </main>
