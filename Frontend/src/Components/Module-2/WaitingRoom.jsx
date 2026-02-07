@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2, Clock } from "lucide-react";
 import { toast } from "react-toastify";
 
-const API_BASE = "http://127.0.0.1:5000";
+
+const API_BASE = "http://localhost:5000"; // Use localhost, not 127.0.0.1
 
 export default function WaitingRoom() {
   const location = useLocation();
@@ -18,11 +19,17 @@ export default function WaitingRoom() {
       return;
     }
 
-    // POLL THE SERVER EVERY 3 SECONDS
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${API_BASE}/user/consultation/status/${consultationId}`);
+        const res = await fetch(`${API_BASE}/user/consultation/status/${consultationId}`, {
+          // CRITICAL: You need this for the backend to recognize the session cookie
+          credentials: "include" 
+        });
+
+        if (!res.ok) throw new Error("Server error");
+        
         const data = await res.json();
+        setStatus(data.status);
 
         if (data.status === "accepted") {
           clearInterval(interval);
@@ -38,7 +45,7 @@ export default function WaitingRoom() {
       }
     }, 3000);
 
-    return () => clearInterval(interval); // Cleanup on leave
+    return () => clearInterval(interval);
   }, [consultationId, navigate]);
 
   return (
@@ -51,9 +58,14 @@ export default function WaitingRoom() {
           </div>
         </div>
         <h2 className="text-2xl font-black text-slate-900 mb-2">Reviewing Your Case</h2>
-        <p className="text-slate-500 font-medium">
+        <p className="text-slate-500 font-medium mb-4">
           The doctor is currently analyzing your triage results and SOAP notes. Please stay on this page.
         </p>
+        
+        {/* Added visual status indicator */}
+        <div className="inline-block px-4 py-1 rounded-full bg-emerald-50 text-emerald-700 text-sm font-bold border border-emerald-100 uppercase tracking-tighter">
+          Current Status: {status}
+        </div>
       </div>
     </div>
   );

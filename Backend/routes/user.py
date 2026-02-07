@@ -43,10 +43,6 @@ def get_triage_history():
             "o": s.soap_o or "N/A",
             "a": s.soap_a or "N/A",
             "p": s.soap_p or "N/A"
-        },
-        "details": {
-            "swelling": s.v5_swelling,
-            "stability": s.v6_stability
         }
     } for s in sessions]), 200
 
@@ -63,12 +59,10 @@ def request_consultation():
     except (TypeError, ValueError):
         return jsonify({"error": "Invalid ID format"}), 400
 
-    doctor_exists = Doctor.query.get(doc_id)
-    if not doctor_exists:
-        return jsonify({"error": f"Doctor profile {doc_id} not found"}), 400
-
     patient_profile = User.query.filter_by(acc_id=acc_id).first()
-    
+    if not patient_profile:
+        return jsonify({"error": "User profile not found"}), 404
+
     new_request = Consultation(
         patient_id=patient_profile.id,
         doctor_id=doc_id,
@@ -79,27 +73,34 @@ def request_consultation():
     try:
         db.session.add(new_request)
         db.session.commit()
-        # FIX: Key renamed to consultation_id to match frontend expectations
         return jsonify({
             "message": "Request sent", 
             "consultation_id": new_request.id 
         }), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": "Database error", "details": str(e)}), 500
+        return jsonify({"error": "Database error"}), 500
 
 @user.route('/consultation/status/<int:consult_id>', methods=['GET'])
-def check_consult_status(consult_id):
-    consult = Consultation.query.get(consult_id)
+def get_consult_status(consult_id):
+    # 1. Check session
+    acc_id = session.get("account_id")
+    if not acc_id:
+        print("DEBUG: No account_id in session")
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # 2. Get patient profile
+    patient = User.query.filter_by(acc_id=acc_id).first()
+    if not patient:
+        return jsonify({"error": "User profile not found"}), 404
+
+    # 3. Find consultation specifically for this patient
+    consult = Consultation.query.filter_by(id=consult_id, patient_id=patient.id).first()
+    
     if not consult:
-        return jsonify({"error": "Not found"}), 404
-        
-    doctor_name = None
-    # Ensure the 'doctor' relationship exists in your Consultation model
-    if consult.status == 'accepted' and consult.doctor:
-        doctor_name = consult.doctor.full_name
+        return jsonify({"error": "Consultation not found"}), 404
         
     return jsonify({
         "status": consult.status,
-        "doctor_name": doctor_name
+        "doctor_name": consult.doctor.full_name if consult.doctor else "Doctor"
     }), 200

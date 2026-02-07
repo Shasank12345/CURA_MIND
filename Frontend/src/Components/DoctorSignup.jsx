@@ -12,7 +12,7 @@ const countries = [
 
 const specializations = [
   "General Practitioner",
-  "Orthopedist",
+  "Orthopedics",
   "Sports Medicine Specialist",
   "Physiotherapist"
 ];

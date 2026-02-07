@@ -22,11 +22,11 @@ def create_app():
     # 2. SESSION & COOKIE SECURITY
     app.secret_key = app.config.get('SECRET_KEY', 'dev_key_only_change_in_production')
     app.config.update(
-        SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SECURE=False,  # Set to True only if using HTTPS
-        SESSION_COOKIE_SAMESITE='Lax',
-        SESSION_COOKIE_NAME='session_id'
-    )
+    SESSION_COOKIE_SAMESITE='Lax',  # Allows cookie to be sent in cross-site requests
+    SESSION_COOKIE_SECURE=False,    # MUST be False for localhost HTTP
+    SESSION_COOKIE_HTTPONLY=True,
+    PERMANENT_SESSION_LIFETIME=3600
+)
 
     # 3. INITIALIZE EXTENSIONS
     db.init_app(app)
