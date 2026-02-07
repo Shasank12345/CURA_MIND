@@ -3,16 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { Eye, CheckCircle, XCircle, ClipboardList, Loader2, Activity, MessageSquare } from "lucide-react";
 import { toast } from "react-toastify";
 
+const API_BASE = "http://localhost:5000";
+
 export default function DoctorDashboard() {
   const navigate = useNavigate();
   const [consultations, setConsultations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAvailable, setIsAvailable] = useState(false);
 
-  // Memoized fetch to prevent unnecessary re-renders during polling
   const fetchData = useCallback(async (isInitial = false) => {
     try {
-      const res = await fetch("http://localhost:5000/doctor/consultations", { 
+      const res = await fetch(`${API_BASE}/doctor/consultations`, { 
         credentials: "include" 
       });
       
@@ -22,12 +23,13 @@ export default function DoctorDashboard() {
       setConsultations(data);
 
       if (isInitial) {
-        const profileRes = await fetch("http://localhost:5000/doctor/profile", { 
+        const profileRes = await fetch(`${API_BASE}/doctor/profile`, { 
           credentials: "include" 
         });
         if (profileRes.ok) {
           const profileData = await profileRes.json();
-          setIsAvailable(profileData.available); 
+          // Match your DB column name: is_available_online
+          setIsAvailable(profileData.available || profileData.is_available_online); 
         }
       }
     } catch (err) {
@@ -37,7 +39,6 @@ export default function DoctorDashboard() {
     }
   }, [navigate]);
 
-  // Initial Load + Polling Every 5 Seconds
   useEffect(() => {
     fetchData(true);
     const interval = setInterval(() => fetchData(false), 5000);
@@ -47,13 +48,13 @@ export default function DoctorDashboard() {
   const stats = useMemo(() => ({
     pending: consultations.filter(c => c.status === 'pending').length,
     accepted: consultations.filter(c => c.status === 'accepted').length,
-    rejected: consultations.filter(c => c.status === 'rejected').length
+    completed: consultations.filter(c => c.status === 'completed').length
   }), [consultations]);
 
   const toggleAvailability = async () => {
     try {
       const newStatus = !isAvailable;
-      const res = await fetch("http://localhost:5000/doctor/update", {
+      const res = await fetch(`${API_BASE}/doctor/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ available: newStatus }),
@@ -69,17 +70,25 @@ export default function DoctorDashboard() {
     }
   };
 
-  const handleAction = async (id, status) => {
+  const handleAction = async (id, action) => {
     try {
-      const res = await fetch(`http://localhost:5000/doctor/consultation/${id}/respond`, {
+      // ALIGNED WITH OTOCHAT BACKEND LOGIC
+      const res = await fetch(`${API_BASE}/otochat/respond/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ action }), // 'accepted' or 'rejected'
         credentials: "include"
       });
+
       if (res.ok) {
-        setConsultations(prev => prev.map(c => c.id === id ? { ...c, status } : c));
-        toast.success(`ID #${id} ${status.toUpperCase()}`);
+        const data = await res.json();
+        setConsultations(prev => prev.map(c => c.id === id ? { ...c, status: data.status } : c));
+        toast.success(`SESSION ${id}: ${action.toUpperCase()}`);
+        
+        // Auto-navigate if accepted
+        if (action === 'accepted') {
+          navigate("/doctordashboard/onetoonechat", { state: { consultationId: id } });
+        }
       }
     } catch (err) {
       toast.error("Action failed.");
@@ -96,12 +105,11 @@ export default function DoctorDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 px-6 pt-24 pb-6 font-sans">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
         <div className="flex justify-between items-end mb-10">
           <div>
             <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Clinical Command</h1>
             <p className="text-slate-500 text-xs font-bold tracking-widest uppercase mt-1 flex items-center gap-2">
-              <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+              <span className={`inline-block w-2 h-2 rounded-full ${isAvailable ? 'bg-emerald-500 animate-ping' : 'bg-slate-300'}`}></span>
               Live Session Monitoring
             </p>
           </div>
@@ -119,21 +127,19 @@ export default function DoctorDashboard() {
           </button>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           <StatCard title="Awaiting Triage" value={stats.pending} color="yellow" />
           <StatCard title="Active Sessions" value={stats.accepted} color="green" />
-          <StatCard title="Terminated" value={stats.rejected} color="red" />
+          <StatCard title="Completed" value={stats.completed} color="slate" />
         </div>
 
-        {/* Queue Table */}
         <div className="bg-white border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <div className="flex items-center gap-3">
               <ClipboardList className="text-slate-800" size={18} />
               <h3 className="text-xs font-black text-slate-800 uppercase tracking-[0.15em]">Patient Queue</h3>
             </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Auto-refreshing every 5s</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Auto-refreshing 5s</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -142,16 +148,14 @@ export default function DoctorDashboard() {
                 <tr className="border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/30">
                   <th className="p-5">ID</th>
                   <th className="p-5">Patient Name</th>
-                  <th className="p-5">Priority</th>
+                  <th className="p-5">Triage</th>
                   <th className="p-5 text-right">Operational Control</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {consultations.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="p-16 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">
-                      Queue Empty. No incoming data.
-                    </td>
+                    <td colSpan="4" className="p-16 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">Queue Empty.</td>
                   </tr>
                 ) : (
                   consultations.map((c) => (
@@ -159,48 +163,34 @@ export default function DoctorDashboard() {
                       <td className="p-5 font-mono text-xs font-bold text-slate-400">#{c.id}</td>
                       <td className="p-5">
                         <span className="block font-black text-slate-800 text-sm uppercase tracking-tight">{c.patient_name}</span>
-                        <span className="text-[9px] text-slate-400 font-bold uppercase">Ref: {c.patient_id || 'EXT-00'}</span>
+                        <span className="text-[9px] text-slate-400 font-bold uppercase">Status: {c.status}</span>
                       </td>
                       <td className="p-5">
                         <span className={`px-3 py-1 text-[9px] font-black tracking-widest uppercase border ${
                           c.triage_result === 'RED' ? 'border-red-500 text-red-600 bg-red-50' : 'border-emerald-500 text-emerald-600 bg-emerald-50'
                         }`}>
-                          {c.triage_result}
+                          {c.triage_result || 'NORMAL'}
                         </span>
                       </td>
                       <td className="p-5">
                         <div className="flex justify-end gap-3">
-                          <button 
-                            onClick={() => navigate(`/doctordashboard/views/${c.id}`)}
-                            className="flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-600 text-[10px] font-black uppercase hover:bg-slate-900 hover:text-white transition-all"
-                          >
-                            <Eye size={14} /> View
-                          </button>
-                          
-                          {c.status === 'pending' ? (
+                          {c.status === 'pending' && (
                             <>
-                              <button 
-                                onClick={() => handleAction(c.id, 'accepted')} 
-                                className="flex items-center gap-2 px-3 py-2 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase hover:bg-emerald-600 hover:text-white transition-all"
-                              >
+                              <button onClick={() => handleAction(c.id, 'accepted')} className="flex items-center gap-2 px-3 py-2 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase hover:bg-emerald-600 hover:text-white transition-all">
                                 <CheckCircle size={14}/> Accept
                               </button>
-                              <button 
-                                onClick={() => handleAction(c.id, 'rejected')} 
-                                className="flex items-center gap-2 px-3 py-2 bg-red-100 text-red-700 text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all"
-                              >
+                              <button onClick={() => handleAction(c.id, 'rejected')} className="flex items-center gap-2 px-3 py-2 bg-red-100 text-red-700 text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all">
                                 <XCircle size={14}/> Deny
                               </button>
                             </>
-                          ) : c.status === 'accepted' ? (
+                          )}
+                          {c.status === 'accepted' && (
                             <button 
                               onClick={() => navigate("/doctordashboard/onetoonechat", { state: { consultationId: c.id } })}
-                              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase shadow-md shadow-emerald-100 hover:scale-105 transition-all"
+                              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase shadow-lg hover:scale-105 transition-all"
                             >
-                              <MessageSquare size={14} /> Start Chat
+                              <MessageSquare size={14} /> Resume Chat
                             </button>
-                          ) : (
-                            <span className="text-[10px] font-black uppercase text-slate-300 py-2">{c.status}</span>
                           )}
                         </div>
                       </td>
@@ -217,13 +207,14 @@ export default function DoctorDashboard() {
 }
 
 const StatCard = ({ title, value, color }) => {
-  const styles = {
-    green: "border-b-4 border-b-emerald-500",
-    red: "border-b-4 border-b-red-500",
-    yellow: "border-b-4 border-b-yellow-500",
+  const colors = {
+    green: "border-b-emerald-500",
+    red: "border-b-red-500",
+    yellow: "border-b-yellow-500",
+    slate: "border-b-slate-400"
   };
   return (
-    <div className={`p-8 bg-white border border-slate-200 shadow-sm transition-all hover:shadow-md ${styles[color]}`}>
+    <div className={`p-8 bg-white border border-slate-200 shadow-sm border-b-4 ${colors[color]}`}>
       <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2">{title}</p>
       <h2 className="text-5xl font-black text-slate-900 tracking-tighter">{String(value).padStart(2, '0')}</h2>
     </div>
