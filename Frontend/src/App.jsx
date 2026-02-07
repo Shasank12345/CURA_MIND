@@ -19,6 +19,7 @@ import Rejectoption from './Components/Admin/Rejectoption';
 // import User1 from "./Components/Admin/User1";
 import DoctorResponse1 from './Components/Admin/DoctorResponse1'
 import DoctorResponse2 from "./Components/Admin/DoctorResponse2";
+import MessageTriage from "./Components/Admin/Messagetriage";
 
 // User (Module 2)
 import Navbar from "./Components/Module-2/Navbar";
@@ -62,6 +63,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="rejectoption" element={<Rejectoption />} />
           <Route path="doctordetail" element={<DoctorDetail />} />
+          <Route path="message-triage" element={<MessageTriage />} />
           
           {/* Use the Combined View for Triage Audit */}
           <Route path="User1" element={<User1/>} />

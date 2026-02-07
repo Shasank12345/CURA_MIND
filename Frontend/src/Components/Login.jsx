@@ -82,6 +82,54 @@ export default function Login() {
       className="min-h-screen flex items-center justify-center bg-gray-100 bg-cover bg-center p-4"
       style={{ backgroundImage: `url('/src/assets/fi.jpg')` }}
     >
+      {/* NAVBAR */}
+      <nav className="fixed top-0 left-0 w-full flex justify-between items-center px-8 py-4 bg-white/90 backdrop-blur-md shadow-md z-50">
+        <div
+          className="flex items-center gap-2 text-xl font-bold cursor-pointer"
+          onClick={() => navigate("/")}
+        >
+          <span className="text-green-600 text-3xl">🍃</span>
+          <span className="tracking-wide text-gray-900 text-2xl">CuraMind</span>
+        </div>
+
+        <div className="flex items-center gap-4 relative">
+          <button
+            onClick={() => navigate("/Login")}
+            className="text-gray-700 font-medium hover:text-green-700 transition"
+          >
+            Login
+          </button>
+
+          {/* Signup dropdown */}
+          <div className="relative group inline-block">
+            <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-xl shadow-md font-semibold transition">
+              Signup
+            </button>
+
+            <div
+              className="absolute left-1/2 -translate-x-1/2 mt-2 w-48 bg-white border border-gray-300
+                            rounded-xl shadow-lg p-2 space-y-2 opacity-0 invisible
+                            group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+            >
+              <div
+                onClick={() => navigate("/DoctorSignup")}
+                className="w-full py-2 px-3 text-left rounded-lg border border-gray-black
+                           hover:bg-green-50 cursor-pointer text-sm font-medium transition"
+              >
+                👨‍⚕️ Sign up as Doctor
+              </div>
+
+              <div
+                onClick={() => navigate("/UserSignup")}
+                className="w-full py-2 px-3 text-left rounded-lg border border-gray-black
+                           hover:bg-green-50 cursor-pointer text-sm font-medium transition"
+              >
+                👤 Sign up as User
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
       <div className="absolute inset-0 bg-black opacity-20"></div>
 
       <div className="relative bg-white bg-opacity-95 p-8 rounded-3xl shadow-2xl max-w-md w-full space-y-6">
