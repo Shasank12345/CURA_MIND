@@ -3,7 +3,7 @@ import random
 from datetime import datetime, timedelta, timezone
 from flask import Blueprint, request, jsonify, session
 from supabase import create_client
-from extension import db
+from extension import db,bcrypt
 from model import Account, Doctor, User, Otp
 from utilities import send_mail, gen_pass
 from werkzeug.utils import secure_filename
@@ -28,9 +28,12 @@ def sign_up():
             return jsonify({"error": "Email already registered"}), 409
 
         temp_password = gen_pass()
+        
+        hashed_temp_password = bcrypt.generate_password_hash(temp_password).decode('utf-8')
+
         new_account = Account(
             email=email,
-            password=temp_password, 
+            password=hashed_temp_password, 
             role=role,
             is_temp_password=True,
             is_verified=(role == 'User') 
@@ -39,7 +42,6 @@ def sign_up():
         db.session.flush()
 
         if role == 'Doctor':
-            # Mandatory fields check
             required = ['Full_Name', 'License_No', 'Specialization', 'Phone_Number', 'DOB']
             if not all(data.get(field) for field in required):
                 return jsonify({"error": "Missing mandatory fields"}), 400
@@ -105,7 +107,8 @@ def login():
     email, password = data.get('Email'), data.get('Password')
     account = Account.query.filter_by(email=email).first()
 
-    if not account or account.password != password:
+    
+    if not account or not bcrypt.check_password_hash(account.password, password):
         return jsonify({"error": "Invalid credentials"}), 401
 
     if not account.is_verified:
@@ -117,7 +120,6 @@ def login():
     session['email'] = account.email 
     session.permanent = True 
     
-    # THE CRITICAL FIX: Nest id and role inside the user object
     return jsonify({
         "message": "Login successful",
         "role": account.role,
@@ -130,7 +132,6 @@ def login():
 
 @auth.route("/change_password", methods=["POST"])
 def change_password():
-    # Retrieve email from session
     email = session.get("reset_email") or session.get("email")
     
     if not email:
@@ -142,17 +143,16 @@ def change_password():
     account = Account.query.filter_by(email=email).first()
     if not account: return jsonify({"error": "Account not found"}), 404
 
-    account.password = new_pass
+    account.password = bcrypt.generate_password_hash(new_pass).decode('utf-8')
     account.is_temp_password = False 
     db.session.commit()
+    
     session['account_id'] = account.id
-    session['role'] = account.role  # ADD THIS LINE
-    session['email'] = account.email # ADD THIS LINE
+    session['role'] = account.role
+    session['email'] = account.email
     session.permanent = True
 
-    # DO NOT use session.clear() here. It kills the session you just built.
     session.pop("reset_email", None) 
-    # session['account_id'] = account.id # Ensure ID is set for subsequent polls
     
     return jsonify({"message": "Password updated successfully"}), 200
 

@@ -2,7 +2,7 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from config import Config
-from extension import db, mail
+from extension import db, mail, bcrypt
 from routes import register_routes
 from model import Account
 
@@ -10,29 +10,24 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # 1. STRICT CORS CONFIGURATION
-    # Ensure 'origins' matches your React URL exactly. 
-    # Do not mix 'localhost' and '127.0.0.1'.
     CORS(app, 
          supports_credentials=True, 
          origins=["http://localhost:5173"],
          allow_headers=["Content-Type", "Authorization"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
-    # 2. SESSION & COOKIE SECURITY
     app.secret_key = app.config.get('SECRET_KEY', 'dev_key_only_change_in_production')
     app.config.update(
-    SESSION_COOKIE_SAMESITE='Lax',  # Allows cookie to be sent in cross-site requests
-    SESSION_COOKIE_SECURE=False,    # MUST be False for localhost HTTP
-    SESSION_COOKIE_HTTPONLY=True,
-    PERMANENT_SESSION_LIFETIME=3600
-)
+        SESSION_COOKIE_SAMESITE='Lax',  
+        SESSION_COOKIE_SECURE=False,   
+        SESSION_COOKIE_HTTPONLY=True,
+        PERMANENT_SESSION_LIFETIME=3600
+    )
 
-    # 3. INITIALIZE EXTENSIONS
+
     db.init_app(app)
     mail.init_app(app)
-
-    # 4. REGISTER ROUTES
+    bcrypt.init_app(app)
     register_routes(app)
 
     return app
@@ -50,9 +45,12 @@ def initialize_system():
         admin_exists = Account.query.filter_by(email=admin_email).first()
         
         if not admin_exists:
+           
+            hashed_password = bcrypt.generate_password_hash(admin_pass).decode('utf-8')
+
             new_admin = Account(
                 email=admin_email,
-                password=admin_pass,
+                password=hashed_password, 
                 role='Admin',
                 is_temp_password=False,
                 is_verified=True
@@ -60,16 +58,14 @@ def initialize_system():
             db.session.add(new_admin)
             try:
                 db.session.commit()
-                print(f"Admin initialized: {admin_email}")
+                print(f"Admin initialized with hashed password: {admin_email}")
             except Exception as e:
                 db.session.rollback()
                 print(f"Failed to initialize admin: {e}")
         else:
             print("Admin account already present.")
 
-# Run initialization
 initialize_system()
 
 if __name__ == "__main__":
-    # Explicitly binding to localhost
     app.run(debug=True, host="localhost", port=5000)

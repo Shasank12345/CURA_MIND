@@ -36,7 +36,7 @@ const downloadDoctorSummary = (s) => {
   doc.setFontSize(18);
   doc.text("OFFICIAL CLINICAL SUMMARY", 15, 20);
   doc.setFontSize(10);
-  doc.text(`Attending Physician: Dr. ${s.doctor_name}`, 15, 35);
+  doc.text(`Attending Doctor: Dr. ${s.doctor_name}`, 15, 35);
   doc.text(`Consultation Date: ${s.date}`, 15, 40);
   doc.line(15, 45, 195, 45);
   doc.setFontSize(12);

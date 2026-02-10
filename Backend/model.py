@@ -84,23 +84,22 @@ class Consultation(db.Model):
     status = db.Column(db.String(20), default='pending', nullable=False) # pending, accepted, rejected, completed
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # NEW: Clinical documentation fields
+    
     clinical_summary = db.Column(db.Text, nullable=True) 
     ended_at = db.Column(db.DateTime, nullable=True)
 
-    # Relationships
     patient = db.relationship('User', backref='consultations')
     doctor = db.relationship('Doctor', backref='consultations_as_doctor')
     triage_session = db.relationship('TriageSession', backref='consultation_ref')
 
 class Message(db.Model):
-    __tablename__ = 'messages' # Always define this explicitly
+    __tablename__ = 'messages' 
     id = db.Column(db.Integer, primary_key=True)
     
-    # Fix: consultation_id must point to 'consultations.id', NOT 'consultation.id'
+   
     consultation_id = db.Column(db.Integer, db.ForeignKey('consultations.id', ondelete='CASCADE'), nullable=False)
     
-    # Fix: sender_id must point to 'accounts.id', NOT 'account.id'
+  
     sender_id = db.Column(db.Integer, db.ForeignKey('accounts.id', ondelete='CASCADE'), nullable=False)
     
     content = db.Column(db.Text, nullable=False)
